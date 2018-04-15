@@ -58,7 +58,6 @@ public:
 	//config
 	ConfigT configVars;
 
-private:
 	/**
 	 * Default config létrehozása
 	 */
@@ -70,7 +69,7 @@ private:
 		memcpy(&configVars.version, NSP_VERSION, NSP_VERSION_SIZE);
 
 		//BitMap
-		configVars.boolBits.bits.blackLightState = DEF_BLACKLIGHT_STATE;
+		configVars.boolBits.bits.blackLightState = DEF_BACKLIGHT_STATE;
 		configVars.boolBits.bits.beepState = DEF_BEEP_STATE;
 
 		//LCD

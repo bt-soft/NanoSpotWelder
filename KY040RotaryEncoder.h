@@ -62,7 +62,8 @@ public:
 	 * konstruktor
 	 */
 	KY040RotaryEncoder(uint8_t A, uint8_t B, uint8_t BTN = -1, uint8_t stepsPerNotch = 1, bool active = LOW) :	ClickEncoder(A, B, BTN, stepsPerNotch, active) {
-		rotaryValue = lastRotaryValue = ClickEncoder::getValue();
+		rotaryValue = 0;
+		lastRotaryValue = getValue();
 		direction = NONE;
 	}
 
@@ -79,9 +80,9 @@ public:
 	 * Kiolvasás után az irányt töröjük
 	 */
 	const Direction getDirection(void) {
-		Direction oldDirection = direction;
+		Direction d = direction;
 		direction = NONE;
-		return oldDirection;
+		return d;
 	}
 
 	/**
@@ -100,9 +101,21 @@ public:
 			direction = UP;
 			delay(150);
 		} else {
-			direction = NONE;
+			//direction = NONE;
 		}
 
+	}
+
+	/**
+	 * Klikkeltek?
+	 */
+	bool isClicked(void) {
+		ClickEncoder::Button button = ClickEncoder::getButton();
+		if(button != ClickEncoder::Open && button == ClickEncoder::Clicked){
+			return true;
+		}
+
+		return false;
 	}
 
 

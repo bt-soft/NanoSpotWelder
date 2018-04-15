@@ -51,11 +51,6 @@ Nokia5110Display nokia5110Display = Nokia5110Display(8, 7, 6, 5, 4); //Software 
 
 // Menü paraméterek (https://gist.github.com/Xplorer001/a829f8750d5df40b090645d63e2a187f)
 #define MAX_ITEM_SIZE 10
-#define BACK_MENU_ITEM "Back"
-char menu[][MAX_ITEM_SIZE] = { "Weld Options", "Temp alarm", "Beep", "Light", BACK_MENU_ITEM };
-char subMenu_Weld[][MAX_ITEM_SIZE] = { "Preweld", "Pause", "Weld", BACK_MENU_ITEM };
-int menuItemSelected;
-int subMenuSelected;
 
 // -- Runtime adatok
 long lastMiliSec = -1;
@@ -129,7 +124,7 @@ void drawSplashScreen(void) {
 	nokia5110Display.print("v");
 
 	nokia5110Display.setTextSize(2);
-	sprintf(&tempBuff[0], "%s", config.configVars.version);
+	sprintf(tempBuff, "%s", config.configVars.version);
 	nokia5110Display.setCursor(14, 18);
 	nokia5110Display.print(tempBuff);
 
@@ -150,7 +145,7 @@ void drawMainDisplay(float currentMotTemp) {
 	nokia5110Display.setTextSize(1);
 
 	nokia5110Display.println("PWld  Pse  Wld");
-	sprintf(&tempBuff[0], "%-3d   %-3d  %-3d", config.configVars.preWeldPulseCnt, config.configVars.pausePulseCnt, config.configVars.weldPulseCnt);
+	sprintf(tempBuff, "%-3d   %-3d  %-3d", config.configVars.preWeldPulseCnt, config.configVars.pausePulseCnt, config.configVars.weldPulseCnt);
 	nokia5110Display.println(tempBuff);
 
 	nokia5110Display.print("\nMOT Temp");
@@ -162,7 +157,7 @@ void drawMainDisplay(float currentMotTemp) {
 
 	nokia5110Display.setTextSize(1);
 	nokia5110Display.setCursor(68, 38);
-	sprintf(&tempBuff[0], "%cC", DEGREE_SYMBOL_CODE);
+	sprintf(tempBuff, "%cC", DEGREE_SYMBOL_CODE);
 	nokia5110Display.print(tempBuff);
 
 	nokia5110Display.display();
@@ -188,7 +183,7 @@ void drawWarningDisplay(float currentMotTemp) {
 
 	nokia5110Display.setTextSize(1);
 	nokia5110Display.setCursor(68, 38);
-	sprintf(&tempBuff[0], "%cC", DEGREE_SYMBOL_CODE);
+	sprintf(tempBuff, "%cC", DEGREE_SYMBOL_CODE);
 	nokia5110Display.print(tempBuff);
 
 	nokia5110Display.display();
@@ -230,6 +225,290 @@ void mainDisplayController() {
  */
 void rotaryEncoderServiceInterrupt(void) {
 	rotaryEncoder->service();
+}
+
+int menuItem = 1;
+int menuFrame = 1;
+int menuPage = 1;
+int lastMenuItem = 1;
+
+#define MENU_PAGE_SIZE 	3	/* Menu elemekbõl ennyi látszik */
+#define MENUITEMS_CNT 	7	/* Összes menuelemek száma */
+String menuItems[MENUITEMS_CNT];
+
+int volume = 50;
+
+String language[3] = { "EN", "ES", "EL" };
+int selectedLanguage = 0;
+
+String difficulty[2] = { "EASY", "HARD" };
+int selectedDifficulty = 0;
+
+/**
+ *
+ */
+void initMenuItems() {
+
+	menuItems[0] = String("Contrast");
+	menuItems[1] = String("Volume");
+	menuItems[2] = String("Language");
+	menuItems[3] = String("Difficulty");
+	sprintf(tempBuff, "Light:%s", !config.configVars.boolBits.bits.blackLightState ? "ON" : "OFF");
+	menuItems[4] = String(tempBuff);
+	menuItems[5] = String("Reset");
+	menuItems[6] = String("Exit");
+
+}
+
+/**
+ *
+ */
+void displayMenuItem(String item, int position, boolean selected) {
+	nokia5110Display.setCursor(0, position);
+
+	if (selected) {
+		nokia5110Display.setTextColor(WHITE, BLACK);
+		nokia5110Display.print(">" + item);
+	} else {
+		nokia5110Display.setTextColor(BLACK, WHITE);
+		nokia5110Display.print(" " + item);
+	}
+}
+
+/**
+ *
+ */
+void displayStringMenuPage(String menuItem, String value) {
+	nokia5110Display.setTextSize(1);
+	nokia5110Display.clearDisplay();
+	nokia5110Display.setTextColor(BLACK, WHITE);
+	nokia5110Display.setCursor(15, 0);
+	nokia5110Display.print(menuItem);
+	nokia5110Display.drawFastHLine(0, 10, 83, BLACK);
+	nokia5110Display.setCursor(5, 15);
+	nokia5110Display.print("Value");
+	nokia5110Display.setTextSize(2);
+	nokia5110Display.setCursor(5, 25);
+	nokia5110Display.print(value);
+	nokia5110Display.setTextSize(2);
+	nokia5110Display.display();
+}
+
+/**
+ *
+ */
+void displayIntMenuPage(String menuItem, int value) {
+	displayStringMenuPage(menuItem, String(value));
+}
+
+/**
+ *
+ */
+void drawMenu() {
+#define LINE_1 15
+#define LINE_2 25
+#define LINE_3 35
+
+	if (menuPage == 1) {
+		nokia5110Display.setTextSize(1);
+		nokia5110Display.clearDisplay();
+		nokia5110Display.setTextColor(BLACK, WHITE);
+		nokia5110Display.setCursor(15, 0);
+		nokia5110Display.print("MAIN MENU");
+		nokia5110Display.drawFastHLine(0, 10, 83, BLACK);
+
+		if (menuItem == 1 && menuFrame == 1) {
+			displayMenuItem(menuItems[0], LINE_1, true);
+			displayMenuItem(menuItems[1], LINE_2, false);
+			displayMenuItem(menuItems[2], LINE_3, false);
+		} else if (menuItem == 2 && menuFrame == 1) {
+			displayMenuItem(menuItems[0], LINE_1, false);
+			displayMenuItem(menuItems[1], LINE_2, true);
+			displayMenuItem(menuItems[2], LINE_3, false);
+		} else if (menuItem == 3 && menuFrame == 1) {
+			displayMenuItem(menuItems[0], LINE_1, false);
+			displayMenuItem(menuItems[1], LINE_2, false);
+			displayMenuItem(menuItems[2], LINE_3, true);
+
+		} else if (menuItem == 4 && menuFrame == 2) {
+			displayMenuItem(menuItems[1], LINE_1, false);
+			displayMenuItem(menuItems[2], LINE_2, false);
+			displayMenuItem(menuItems[3], LINE_3, true);
+		} else if (menuItem == 3 && menuFrame == 2) {
+			displayMenuItem(menuItems[1], LINE_1, false);
+			displayMenuItem(menuItems[2], LINE_2, true);
+			displayMenuItem(menuItems[3], LINE_3, false);
+		} else if (menuItem == 2 && menuFrame == 2) {
+			displayMenuItem(menuItems[1], LINE_1, true);
+			displayMenuItem(menuItems[2], LINE_2, false);
+			displayMenuItem(menuItems[3], LINE_3, false);
+
+		} else if (menuItem == 5 && menuFrame == 3) {
+			displayMenuItem(menuItems[2], LINE_1, false);
+			displayMenuItem(menuItems[3], LINE_2, false);
+			displayMenuItem(menuItems[4], LINE_3, true);
+
+		} else if (menuItem == 6 && menuFrame == 4) {
+			displayMenuItem(menuItems[3], LINE_1, false);
+			displayMenuItem(menuItems[4], LINE_2, false);
+			displayMenuItem(menuItems[5], LINE_3, true);
+
+		} else if (menuItem == 5 && menuFrame == 4) {
+			displayMenuItem(menuItems[3], LINE_1, false);
+			displayMenuItem(menuItems[4], LINE_2, true);
+			displayMenuItem(menuItems[5], LINE_3, false);
+		} else if (menuItem == 4 && menuFrame == 4) {
+			displayMenuItem(menuItems[3], LINE_1, true);
+			displayMenuItem(menuItems[4], LINE_2, false);
+			displayMenuItem(menuItems[5], LINE_3, false);
+		} else if (menuItem == 3 && menuFrame == 3) {
+			displayMenuItem(menuItems[2], LINE_1, true);
+			displayMenuItem(menuItems[3], LINE_2, false);
+			displayMenuItem(menuItems[4], LINE_3, false);
+		} else if (menuItem == 2 && menuFrame == 2) {
+			displayMenuItem(menuItems[1], LINE_1, true);
+			displayMenuItem(menuItems[2], LINE_2, false);
+			displayMenuItem(menuItems[3], LINE_3, false);
+		} else if (menuItem == 4 && menuFrame == 3) {
+			displayMenuItem(menuItems[2], LINE_1, false);
+			displayMenuItem(menuItems[3], LINE_2, true);
+			displayMenuItem(menuItems[4], LINE_3, false);
+		}
+		nokia5110Display.display();
+
+	} else if (menuPage == 2 && menuItem == 1) {
+		displayIntMenuPage(menuItems[0], config.configVars.contrast);
+	} else if (menuPage == 2 && menuItem == 2) {
+		displayIntMenuPage(menuItems[1], volume);
+	} else if (menuPage == 2 && menuItem == 3) {
+		displayStringMenuPage(menuItems[2], language[selectedLanguage]);
+	} else if (menuPage == 2 && menuItem == 4) {
+		displayStringMenuPage(menuItems[3], difficulty[selectedDifficulty]);
+	} else if (menuPage == 2 && menuItem == 4) {
+		displayStringMenuPage(menuItems[3], difficulty[selectedDifficulty]);
+	}
+
+}
+bool inMenu = false;
+/**
+ * Menu kezelése
+ */
+void menuController() {
+
+	rotaryEncoder->readRotaryEncoder();
+
+	//ha nem vagyunk a menu-ben
+	if (!inMenu) {
+		//Ha nem klikkeltek ÉS nincs irány, akkor nem megyünk tovább
+		if (!rotaryEncoder->isClicked() && rotaryEncoder->getDirection() == KY040RotaryEncoder::Direction::NONE) {
+			return;
+		}
+	}
+
+	inMenu = true;
+	drawMenu();
+	KY040RotaryEncoder::Direction direction = rotaryEncoder->getDirection();
+	boolean isClicked = isClicked = rotaryEncoder->isClicked();
+
+	bool changed = false;
+
+	if (direction == KY040RotaryEncoder::Direction::UP) {
+		if (menuPage == 1) {
+
+			if (menuItem == 2 && menuFrame == 2) {
+				menuFrame--;
+			}
+
+			if (menuItem == 4 && menuFrame == 4) {
+				menuFrame--;
+			}
+			if (menuItem == 3 && menuFrame == 3) {
+				menuFrame--;
+			}
+			lastMenuItem = menuItem;
+			menuItem--;
+			if (menuItem == 0) {
+				menuItem = 1;
+			}
+		} else if (menuPage == 2 && menuItem == 1) {
+			config.configVars.contrast++;
+			nokia5110Display.setContrast(config.configVars.contrast);
+			changed = true;
+		} else if (menuPage == 2 && menuItem == 2) {
+			volume++;
+		} else if (menuPage == 2 && menuItem == 3) {
+			selectedLanguage++;
+			if (selectedLanguage == 3) {
+				selectedLanguage = 0;
+			}
+		} else if (menuPage == 2 && menuItem == 4) {
+			selectedDifficulty++;
+			if (selectedDifficulty == 2) {
+				selectedDifficulty = 0;
+			}
+
+		}
+	} else if (direction == KY040RotaryEncoder::Direction::DOWN) {
+		//We have turned the Rotary Encoder Clockwise
+		if (menuPage == 1) {
+
+			if (menuItem == 3 && lastMenuItem == 2) {
+				menuFrame++;
+			} else if (menuItem == 4 && lastMenuItem == 3) {
+				menuFrame++;
+			} else if (menuItem == 5 && lastMenuItem == 4 && menuFrame != 4) {
+				menuFrame++;
+			}
+			lastMenuItem = menuItem;
+			menuItem++;
+			if (menuItem == 7) {
+				menuItem--;
+			}
+
+		} else if (menuPage == 2 && menuItem == 1) {
+			config.configVars.contrast--;
+			nokia5110Display.setContrast(config.configVars.contrast);
+			changed = true;
+		} else if (menuPage == 2 && menuItem == 2) {
+			volume--;
+		} else if (menuPage == 2 && menuItem == 3) {
+
+			selectedLanguage--;
+			if (selectedLanguage == -1) {
+				selectedLanguage = 2;
+			}
+		} else if (menuPage == 2 && menuItem == 4) {
+			selectedDifficulty--;
+			if (selectedDifficulty == -1) {
+				selectedDifficulty = 1;
+			}
+		}
+	} else if (isClicked) { //Middle Button is Pressed
+
+		// Backlight Control
+		if (menuPage == 1 && menuItem == 5) {
+			config.configVars.boolBits.bits.blackLightState = !config.configVars.boolBits.bits.blackLightState;
+			sprintf(tempBuff, "Light:%s", !config.configVars.boolBits.bits.blackLightState ? "ON" : "OFF");
+			menuItems[4] = String(tempBuff);
+
+			changed = true;
+			nokia5110Display.setBlackLightState(config.configVars.boolBits.bits.blackLightState);
+		}
+
+		// Reset
+		if (menuPage == 1 && menuItem == 6) {
+			config.createDefaultConfig();
+		} else if (menuPage == 1 && menuItem <= 4) {
+			menuPage = 2;
+		} else if (menuPage == 2) {
+			menuPage = 1;
+		}
+	}
+
+	//ha vátoztattak az értékeken, akkor mentünk egyet
+	if (changed) {
+		config.save();
+	}
 }
 
 //--- Spot Welding ---------------------------------------------------------------------------------------------------------------------------------------
@@ -283,16 +562,19 @@ void setup() {
 	//config = new Config();
 	config.read();
 
+	//Menüelemek inicializálása
+	initMenuItems();
+
 	//--- Display
 	nokia5110Display.setBlackLightPin(LCD_BLACKLIGHT_PIN);
-	nokia5110Display.contrast = config.configVars.contrast;
-	nokia5110Display.contrastSet();
+	nokia5110Display.setContrast(config.configVars.contrast);	//kontraszt
+	nokia5110Display.setBlackLightState(config.configVars.boolBits.bits.blackLightState); //háttérvilágítás
 	drawSplashScreen();
 
 	//--- Rotary Encoder felhúzása
 	rotaryEncoder = new KY040RotaryEncoder(A0, A1, A2);
 	rotaryEncoder->setAccelerationEnabled(false);
-	rotaryEncoder->setDoubleClickEnabled(true);
+	//rotaryEncoder->setDoubleClickEnabled(true);
 
 	//--- ClickEncoder timer felhúzása
 	Timer1.initialize(ROTARY_ENCODER_SERVICE_INTERVAL_IN_USEC);
@@ -319,7 +601,7 @@ void setup() {
 	//idõmérés indul
 	lastMiliSec = millis();
 
-	buzzer();
+//	buzzer();
 }
 
 /**
@@ -327,19 +609,20 @@ void setup() {
  */
 void loop() {
 
-	{	//Hegesztés kezelése
+	//--- Hegesztés kezelése -------------------------------------------------------------------
+	//Kiolvassuk a weld button állapotát
+	byte weldButtonCurrentState = digitalRead(WELD_BUTTON_PIN);
 
-		//Kiolvassuk a weld button állapotát
-		byte weldButtonCurrentState = digitalRead(WELD_BUTTON_PIN);
-
-		// if the button state changes to pressed, remember the start time
-		if (weldButtonCurrentState == HIGH && weldButtonPrevState == LOW && !isWelding) {
-			weldButtonPushed();
-		}
-		weldButtonPrevState = weldButtonCurrentState;
+	// if the button state changes to pressed, remember the start time
+	if (weldButtonCurrentState == HIGH && weldButtonPrevState == LOW && !isWelding) {
+		weldButtonPushed();
 	}
+	weldButtonPrevState = weldButtonCurrentState;
+	//------------------------------------------------------------------------------------------
 
 	mainDisplayController();
+
+	menuController();
 
 }
 

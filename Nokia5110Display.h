@@ -52,7 +52,8 @@ public:
 	/**
 	 * Kontraszt beállítása
 	 */
-	void contrastSet(void) {
+	void setContrast(uint8_t _contrast) {
+		contrast = _contrast;
 		Adafruit_PCD8544::setContrast(contrast);
 		Adafruit_PCD8544::display();
 	}
@@ -65,6 +66,14 @@ public:
 	}
 
 	/**
+	 * Háttérvilágítás állítása
+	 */
+	void setBlackLightState(bool state){
+		digitalWrite(blackLightPin, state ? HIGH : LOW);
+	}
+
+
+	/**
 	 * Háttérvilágítás toggle
 	 */
 	void toggleBlackLight(void) {
@@ -72,6 +81,7 @@ public:
 			digitalWrite(blackLightPin, !digitalRead(blackLightPin));
 		}
 	}
+
 };
 
 #endif /* NOKIA5110DISPLAY_H_ */
