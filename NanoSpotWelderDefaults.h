@@ -16,4 +16,7 @@
 #define DEF_PAUSE_PULSE_CNT 50 /* 500msec */
 #define DEF_WELD_PULSE_CNT 20 /*  20 periódus: 100Hz -> 200ms */
 
+
+#define DEF_MOT_TEMP_ALARM 90 /* MOT hõmérséklet riasztás */
+
 #endif /* NANOSPOTWELDERDEFAULTS_H_ */

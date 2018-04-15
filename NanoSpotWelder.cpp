@@ -10,7 +10,7 @@
 #include <DallasTemperature.h>
 
 //------------------- Konfig support
-Config *config;
+Config config;
 
 //------------------- Hõmérés
 #define DALLAS18B20_PIN			A3
@@ -56,8 +56,10 @@ char menu[][MAX_ITEM_SIZE] = { "Weld Options", "Temp alarm", "Beep", "Light", BA
 char subMenu_Weld[][MAX_ITEM_SIZE] = { "Preweld", "Pause", "Weld", BACK_MENU_ITEM };
 int menuItemSelected;
 int subMenuSelected;
+
+// -- Runtime adatok
 long lastMiliSec = -1;
-char tempBuff[10];
+char tempBuff[64];
 #define DEGREE_SYMBOL_CODE 247
 
 //------------------- Spot welding paraméterek
@@ -81,6 +83,35 @@ volatile int8_t weldPeriodCnt = 0;
 //Hegesztésben vagyunk?
 volatile boolean isWelding = false;
 
+//------------------- Beeper
+#define BUZZER_PIN 	13
+
+//--- Buzzer ---------------------------------------------------------------------------------------------------------------------------------------------
+
+/**
+ * Sipolás
+ */
+void buzzer(void) {
+	tone(BUZZER_PIN, 1000);
+	delay(500);
+	tone(BUZZER_PIN, 800);
+	delay(500);
+	noTone(BUZZER_PIN);
+}
+
+/**
+ * Riasztás
+ */
+void buzzerAlarm(void) {
+	tone(BUZZER_PIN, 1000);
+	delay(300);
+	tone(BUZZER_PIN, 1000);
+	delay(300);
+	tone(BUZZER_PIN, 1000);
+	delay(300);
+	noTone(BUZZER_PIN);
+}
+
 //--- Fõképernyõ -----------------------------------------------------------------------------------------------------------------------------------------
 /**
  * Splash képernyõ
@@ -98,7 +129,7 @@ void drawSplashScreen(void) {
 	nokia5110Display.print("v");
 
 	nokia5110Display.setTextSize(2);
-	sprintf(&tempBuff[0], "%s", config->configVars.version);
+	sprintf(&tempBuff[0], "%s", config.configVars.version);
 	nokia5110Display.setCursor(14, 18);
 	nokia5110Display.print(tempBuff);
 
@@ -119,7 +150,7 @@ void drawMainDisplay(float currentMotTemp) {
 	nokia5110Display.setTextSize(1);
 
 	nokia5110Display.println("PWld  Pse  Wld");
-	sprintf(&tempBuff[0], "%-3d   %-3d  %-3d", config->configVars.preWeldPulseCnt, config->configVars.pausePulseCnt, config->configVars.weldPulseCnt);
+	sprintf(&tempBuff[0], "%-3d   %-3d  %-3d", config.configVars.preWeldPulseCnt, config.configVars.pausePulseCnt, config.configVars.weldPulseCnt);
 	nokia5110Display.println(tempBuff);
 
 	nokia5110Display.print("\nMOT Temp");
@@ -138,20 +169,50 @@ void drawMainDisplay(float currentMotTemp) {
 }
 
 /**
+ * Magas hõmérséklet risztás
+ */
+void drawWarningDisplay(float currentMotTemp) {
+	nokia5110Display.clearDisplay();
+	nokia5110Display.setTextColor(BLACK);
+	nokia5110Display.setTextSize(1);
+
+	nokia5110Display.println("\n  MOT Temp is");
+	nokia5110Display.println("   too high!");
+
+	nokia5110Display.setTextSize(2);
+	nokia5110Display.setCursor(18, 32);
+	dtostrf(currentMotTemp, 1, 1, tempBuff);
+	nokia5110Display.print(tempBuff);
+
+	nokia5110Display.setTextSize(1);
+	nokia5110Display.setCursor(68, 38);
+	sprintf(&tempBuff[0], "%cC", DEGREE_SYMBOL_CODE);
+	nokia5110Display.print(tempBuff);
+
+	nokia5110Display.display();
+}
+
+/**
  * Main display vezérlés
  */
-void mainDisplayController(){
+void mainDisplayController() {
 	if (millis() - lastMiliSec > 1000) {
 
 		//Hõmérséklet lekérése -> csak egy DS18B20 mérõnk van -> 0 az index
 		tempSensors.requestTemperaturesByIndex(MOT_TEMP_SENSOR_NDX);
 		while (!tempSensors.isConversionComplete()) {
-			delay(1);
+			delayMicroseconds(100);
 		}
 		float currentMotTemp = tempSensors.getTempCByIndex(MOT_TEMP_SENSOR_NDX);
 
-		//Csak az elsõ és a TEMP_DIFF_TO_DISPLAY-nál nagyobb eltérésekre reagálunk
-		if (lastMotTemp == -1.0f || abs(lastMotTemp - currentMotTemp) > TEMP_DIFF_TO_DISPLAY) {
+		//Magas a hõmérséklet?
+		if (currentMotTemp >= /*config->configVars.motTempAlarm*/50.0f) {
+			lastMotTemp = currentMotTemp;
+			drawWarningDisplay(currentMotTemp);
+			buzzerAlarm();
+
+		} else if (lastMotTemp == -1.0f || abs(lastMotTemp - currentMotTemp) > TEMP_DIFF_TO_DISPLAY) {
+			//Csak az elsõ és a TEMP_DIFF_TO_DISPLAY-nál nagyobb eltérésekre reagálunk
 			lastMotTemp = currentMotTemp;
 			drawMainDisplay(currentMotTemp);
 		}
@@ -190,17 +251,17 @@ void weldButtonPushed(void) {
 	digitalWrite(WELD_LED_PIN, HIGH);
 
 	digitalWrite(TRIAC_PIN, HIGH);	//triak be
-	while (weldPeriodCnt <= config->configVars.preWeldPulseCnt) {
+	while (weldPeriodCnt <= config.configVars.preWeldPulseCnt) {
 	}
 
 	digitalWrite(TRIAC_PIN, LOW);	//triak ki
 	weldPeriodCnt = 0;
-	while (weldPeriodCnt <= config->configVars.pausePulseCnt) {
+	while (weldPeriodCnt <= config.configVars.pausePulseCnt) {
 	}
 
 	digitalWrite(TRIAC_PIN, HIGH);	//triak be
 	weldPeriodCnt = 0;
-	while (weldPeriodCnt <= config->configVars.weldPulseCnt) {
+	while (weldPeriodCnt <= config.configVars.weldPulseCnt) {
 	}
 
 	digitalWrite(TRIAC_PIN, LOW);	//triak ki
@@ -217,12 +278,12 @@ void weldButtonPushed(void) {
 void setup() {
 
 	//Konfig felolvasása
-	config = new Config();
-	config->read();
+	//config = new Config();
+	config.read();
 
 	//--- Display
 	nokia5110Display.setBlackLightPin(LCD_BLACKLIGHT_PIN);
-	nokia5110Display.contrast = config->configVars.contrast;
+	nokia5110Display.contrast = config.configVars.contrast;
 	nokia5110Display.contrastSet();
 	drawSplashScreen();
 
@@ -255,6 +316,8 @@ void setup() {
 
 	//idõmérés indul
 	lastMiliSec = millis();
+
+	buzzer();
 }
 
 /**
@@ -275,5 +338,6 @@ void loop() {
 	}
 
 	mainDisplayController();
+
 }
 
