@@ -352,7 +352,6 @@ void drawMenu() {
 			displayMenuItem(menuItems[3], LINE_1, false);
 			displayMenuItem(menuItems[4], LINE_2, false);
 			displayMenuItem(menuItems[5], LINE_3, true);
-
 		} else if (menuItem == 5 && menuFrame == 4) {
 			displayMenuItem(menuItems[3], LINE_1, false);
 			displayMenuItem(menuItems[4], LINE_2, true);
@@ -361,6 +360,8 @@ void drawMenu() {
 			displayMenuItem(menuItems[3], LINE_1, true);
 			displayMenuItem(menuItems[4], LINE_2, false);
 			displayMenuItem(menuItems[5], LINE_3, false);
+
+
 		} else if (menuItem == 3 && menuFrame == 3) {
 			displayMenuItem(menuItems[2], LINE_1, true);
 			displayMenuItem(menuItems[3], LINE_2, false);
