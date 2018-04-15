@@ -56,6 +56,7 @@ char menu[][MAX_ITEM_SIZE] = { "Weld Options", "Temp alarm", "Beep", "Light", BA
 char subMenu_Weld[][MAX_ITEM_SIZE] = { "Preweld", "Pause", "Weld", BACK_MENU_ITEM };
 int menuItemSelected;
 int subMenuSelected;
+long lastMiliSec = -1;
 
 //------------------- Spot welding paraméterek
 //Zero Cross Detection PIN
@@ -87,10 +88,23 @@ void drawSplashScreen(void) {
 	nokia5110Display.setTextSize(1);
 	nokia5110Display.setTextColor(BLACK);
 
-	nokia5110Display.println("Arduino Nano Spot Welder");
+	nokia5110Display.println(" Arduino Nano");
+	nokia5110Display.println(" Spot Welder");
+
+	nokia5110Display.setCursor(8, 25);
+	nokia5110Display.print("v");
 
 	nokia5110Display.setTextSize(2);
-	nokia5110Display.println(*config->configVars.version);
+	char temp[10];
+	sprintf(&temp[0], "%s", config->configVars.version);
+	nokia5110Display.setCursor(14, 18);
+	nokia5110Display.print(temp);
+
+	nokia5110Display.setTextSize(1);
+	nokia5110Display.setCursor(0, 40);
+	nokia5110Display.println(" BT-Soft 2018");
+
+	nokia5110Display.display();
 }
 
 /**
@@ -117,6 +131,7 @@ void drawMainDisplay(float currentMotTemp) {
 	nokia5110Display.setTextSize(1);
 	nokia5110Display.setCursor(74, 38);
 	nokia5110Display.print("C");
+
 	nokia5110Display.display();
 }
 
@@ -205,6 +220,9 @@ void setup() {
 
 	//--- Hõmérés
 	tempSensors.begin();
+
+	//idõmérés indul
+	lastMiliSec = millis();
 }
 
 /**
@@ -225,20 +243,24 @@ void loop() {
 
 	}
 
+	{	//MOT Hõmérés - de csak minden 1 mp-ben
 
+		if (millis() - lastMiliSec > 1000) {
 
-	{	// Hõmérés
-		//Hõmérséklet lekérése -> csak egy DS18B20 mérõnk van -> 0 az index
-		tempSensors.requestTemperaturesByIndex(MOT_TEMP_SENSOR_NDX);
-		while (!tempSensors.isConversionComplete()) {
-			delay(1);
-		}
-		float currentMotTemp = tempSensors.getTempCByIndex(MOT_TEMP_SENSOR_NDX);
+			//Hõmérséklet lekérése -> csak egy DS18B20 mérõnk van -> 0 az index
+			tempSensors.requestTemperaturesByIndex(MOT_TEMP_SENSOR_NDX);
+			while (!tempSensors.isConversionComplete()) {
+				delay(1);
+			}
+			float currentMotTemp = tempSensors.getTempCByIndex(MOT_TEMP_SENSOR_NDX);
 
-		//Csak az elsõ és a TEMP_DIFF_TO_DISPLAY-nál nagyobb eltérésekre reagálunk
-		if (lastMotTemp == -1.0f || abs(lastMotTemp - currentMotTemp) > TEMP_DIFF_TO_DISPLAY) {
-			lastMotTemp = currentMotTemp;
-			drawMainDisplay(currentMotTemp);
+			//Csak az elsõ és a TEMP_DIFF_TO_DISPLAY-nál nagyobb eltérésekre reagálunk
+			if (lastMotTemp == -1.0f || abs(lastMotTemp - currentMotTemp) > TEMP_DIFF_TO_DISPLAY) {
+				lastMotTemp = currentMotTemp;
+				drawMainDisplay(currentMotTemp);
+			}
+
+			lastMiliSec = millis();
 		}
 	}
 }
