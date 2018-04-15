@@ -43,6 +43,7 @@ public:
 	//Konfigurációs típus deklaráció
 	typedef struct config_t {
 		unsigned char version[NSP_VERSION_SIZE];
+
 		BoolBits boolBits;
 
 		uint8_t contrast;
@@ -62,6 +63,7 @@ private:
 	 * Default config létrehozása
 	 */
 	void createDefaultConfig(void) {
+		//Mindent törlünk, ami eddig volt/jött a konfigban
 		memset(&configVars, '\x0', sizeof(configVars));
 
 		//Verzió info
@@ -79,20 +81,11 @@ private:
 		configVars.pausePulseCnt = DEF_PAUSE_PULSE_CNT;
 		configVars.weldPulseCnt = DEF_WELD_PULSE_CNT;
 
-
 		//MOT Temp alarm
 		configVars.motTempAlarm = DEF_MOT_TEMP_ALARM;
 	}
 
 public:
-
-	/**
-	 * Konstruktor
-	 */
-	Config() {
-		//Mindent törlünk, ami eddig volt/jött a konfigban
-		memset(&configVars, '\x0', sizeof(configVars));
-	}
 
 	/**
 	 * Inicializáció

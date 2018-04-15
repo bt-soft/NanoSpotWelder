@@ -176,8 +176,10 @@ void drawWarningDisplay(float currentMotTemp) {
 	nokia5110Display.setTextColor(BLACK);
 	nokia5110Display.setTextSize(1);
 
-	nokia5110Display.println("\n  MOT Temp is");
-	nokia5110Display.println("   too high!");
+	nokia5110Display.println("!!!!!!!!!!!!!!");
+	nokia5110Display.println(" MOT Temp is");
+	nokia5110Display.println("  too high!");
+	nokia5110Display.println("!!!!!!!!!!!!!!");
 
 	nokia5110Display.setTextSize(2);
 	nokia5110Display.setCursor(18, 32);
