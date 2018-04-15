@@ -60,6 +60,8 @@ private:
 	 * Default config létrehozása
 	 */
 	void createDefaultConfig(void) {
+		memset(&configVars, '\x0', sizeof(configVars));
+
 		//Verzió info
 		memcpy(&configVars.version, NSP_VERSION, NSP_VERSION_SIZE);
 
@@ -74,7 +76,6 @@ private:
 		configVars.preWeldPulseCnt = DEF_PREWELD_PULSE_CNT;
 		configVars.pausePulseCnt = DEF_PAUSE_PULSE_CNT;
 		configVars.weldPulseCnt = DEF_WELD_PULSE_CNT;
-
 	}
 
 public:

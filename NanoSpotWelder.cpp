@@ -57,6 +57,8 @@ char subMenu_Weld[][MAX_ITEM_SIZE] = { "Preweld", "Pause", "Weld", BACK_MENU_ITE
 int menuItemSelected;
 int subMenuSelected;
 long lastMiliSec = -1;
+char tempBuff[10];
+#define DEGREE_SYMBOL_CODE 247
 
 //------------------- Spot welding paraméterek
 //Zero Cross Detection PIN
@@ -64,6 +66,7 @@ long lastMiliSec = -1;
 
 //Triac/MOC vezérlés PIN
 #define TRIAC_PIN 12
+#define WELD_LED_PIN 11
 
 //Hegesztés gomb
 #define WELD_BUTTON_PIN A4
@@ -95,10 +98,9 @@ void drawSplashScreen(void) {
 	nokia5110Display.print("v");
 
 	nokia5110Display.setTextSize(2);
-	char temp[10];
-	sprintf(&temp[0], "%s", config->configVars.version);
+	sprintf(&tempBuff[0], "%s", config->configVars.version);
 	nokia5110Display.setCursor(14, 18);
-	nokia5110Display.print(temp);
+	nokia5110Display.print(tempBuff);
 
 	nokia5110Display.setTextSize(1);
 	nokia5110Display.setCursor(0, 40);
@@ -117,22 +119,45 @@ void drawMainDisplay(float currentMotTemp) {
 	nokia5110Display.setTextSize(1);
 
 	nokia5110Display.println("PWld  Pse  Wld");
-	char temp[10];
-	sprintf(&temp[0], " %02d   %02d    %02d", config->configVars.preWeldPulseCnt, config->configVars.pausePulseCnt, config->configVars.weldPulseCnt);
-	nokia5110Display.println(temp);
+	sprintf(&tempBuff[0], "%-3d   %-3d  %-3d", config->configVars.preWeldPulseCnt, config->configVars.pausePulseCnt, config->configVars.weldPulseCnt);
+	nokia5110Display.println(tempBuff);
 
-	nokia5110Display.print("\nMOT Temp:");
+	nokia5110Display.print("\nMOT Temp");
 
 	nokia5110Display.setTextSize(2);
-	nokia5110Display.setCursor(20, 32);
-	dtostrf(currentMotTemp, 1, 1, temp);
-	nokia5110Display.print(temp);
+	nokia5110Display.setCursor(18, 32);
+	dtostrf(currentMotTemp, 1, 1, tempBuff);
+	nokia5110Display.print(tempBuff);
 
 	nokia5110Display.setTextSize(1);
-	nokia5110Display.setCursor(74, 38);
-	nokia5110Display.print("C");
+	nokia5110Display.setCursor(68, 38);
+	sprintf(&tempBuff[0], "%cC", DEGREE_SYMBOL_CODE);
+	nokia5110Display.print(tempBuff);
 
 	nokia5110Display.display();
+}
+
+/**
+ * Main display vezérlés
+ */
+void mainDisplayController(){
+	if (millis() - lastMiliSec > 1000) {
+
+		//Hõmérséklet lekérése -> csak egy DS18B20 mérõnk van -> 0 az index
+		tempSensors.requestTemperaturesByIndex(MOT_TEMP_SENSOR_NDX);
+		while (!tempSensors.isConversionComplete()) {
+			delay(1);
+		}
+		float currentMotTemp = tempSensors.getTempCByIndex(MOT_TEMP_SENSOR_NDX);
+
+		//Csak az elsõ és a TEMP_DIFF_TO_DISPLAY-nál nagyobb eltérésekre reagálunk
+		if (lastMotTemp == -1.0f || abs(lastMotTemp - currentMotTemp) > TEMP_DIFF_TO_DISPLAY) {
+			lastMotTemp = currentMotTemp;
+			drawMainDisplay(currentMotTemp);
+		}
+
+		lastMiliSec = millis();
+	}
 }
 
 //--- Menü -----------------------------------------------------------------------------------------------------------------------------------------------
@@ -162,6 +187,8 @@ void weldButtonPushed(void) {
 	weldPeriodCnt = 0;
 	isWelding = true;
 
+	digitalWrite(WELD_LED_PIN, HIGH);
+
 	digitalWrite(TRIAC_PIN, HIGH);	//triak be
 	while (weldPeriodCnt <= config->configVars.preWeldPulseCnt) {
 	}
@@ -178,13 +205,14 @@ void weldButtonPushed(void) {
 
 	digitalWrite(TRIAC_PIN, LOW);	//triak ki
 
+	digitalWrite(WELD_LED_PIN, LOW);
 	isWelding = false;
 }
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- * Beállítások
+ * Boot beállítások
  */
 void setup() {
 
@@ -218,6 +246,10 @@ void setup() {
 	pinMode(TRIAC_PIN, OUTPUT);
 	digitalWrite(TRIAC_PIN, LOW);
 
+	//Weld LED
+	pinMode(WELD_LED_PIN, OUTPUT);
+	digitalWrite(WELD_LED_PIN, LOW);
+
 	//--- Hõmérés
 	tempSensors.begin();
 
@@ -240,28 +272,8 @@ void loop() {
 			weldButtonPushed();
 		}
 		weldButtonPrevState = weldButtonCurrentState;
-
 	}
 
-	{	//MOT Hõmérés - de csak minden 1 mp-ben
-
-		if (millis() - lastMiliSec > 1000) {
-
-			//Hõmérséklet lekérése -> csak egy DS18B20 mérõnk van -> 0 az index
-			tempSensors.requestTemperaturesByIndex(MOT_TEMP_SENSOR_NDX);
-			while (!tempSensors.isConversionComplete()) {
-				delay(1);
-			}
-			float currentMotTemp = tempSensors.getTempCByIndex(MOT_TEMP_SENSOR_NDX);
-
-			//Csak az elsõ és a TEMP_DIFF_TO_DISPLAY-nál nagyobb eltérésekre reagálunk
-			if (lastMotTemp == -1.0f || abs(lastMotTemp - currentMotTemp) > TEMP_DIFF_TO_DISPLAY) {
-				lastMotTemp = currentMotTemp;
-				drawMainDisplay(currentMotTemp);
-			}
-
-			lastMiliSec = millis();
-		}
-	}
+	mainDisplayController();
 }
 
