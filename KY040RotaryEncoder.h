@@ -38,12 +38,15 @@
 //A ClickEncoder service metódusát meghívó timer interrupt idõzítése -> 1 msec
 #define ROTARY_ENCODER_SERVICE_INTERVAL_IN_USEC 1000
 
+#define ROTARY_ENCODER_DIVIDER	2
+
 /**
  * KY-040 Rotary Encoder osztály
  */
 class KY040RotaryEncoder: public ClickEncoder {
 
 public:
+
 	/**
 	 * Irány enum
 	 */
@@ -51,73 +54,65 @@ public:
 		UP, DOWN, NONE
 	} Direction;
 
+	/**
+	 * Visszatérési érték
+	 */
+	typedef struct KY040RotaryEncoderResult_T {
+		Direction_t direction;bool clicked;
+	} KY040RotaryEncoderResult;
+
 private:
-	int16_t lastRotaryValue;
-	int16_t rotaryValue;
-	Direction direction;
+	int16_t lastRotaryValue = 0;
+	int16_t rotaryValue = 0;
 
 public:
 
 	/**
 	 * konstruktor
 	 */
-	KY040RotaryEncoder(uint8_t A, uint8_t B, uint8_t BTN = -1, uint8_t stepsPerNotch = 1, bool active = LOW) :	ClickEncoder(A, B, BTN, stepsPerNotch, active) {
-		rotaryValue = 0;
-		lastRotaryValue = getValue();
-		direction = NONE;
+	KY040RotaryEncoder(uint8_t A, uint8_t B, uint8_t BTN = -1, uint8_t stepsPerNotch = 1, bool active = LOW) :
+			ClickEncoder(A, B, BTN, stepsPerNotch, active) {
 	}
-
 
 	/**
 	 * A rotary encoder kezdõértékének kiolvasása
 	 */
 	void init(void) {
-
-	}
-
-	/**
-	 * Irány elkérése
-	 * Kiolvasás után az irányt töröjük
-	 */
-	const Direction getDirection(void) {
-		Direction d = direction;
-		direction = NONE;
-		return d;
+		lastRotaryValue = ClickEncoder::getValue();
 	}
 
 	/**
 	 * Rotary encoder olvasása, az irány meghatározása
 	 */
-	void readRotaryEncoder(void) {
+	KY040RotaryEncoderResult readRotaryEncoder(void) {
 
-		rotaryValue += getValue();
+		KY040RotaryEncoderResult result;
 
-		if (rotaryValue / 2 > lastRotaryValue) {
-			lastRotaryValue = rotaryValue / 2;
-			direction = DOWN;
-			delay(150);
-		} else if (rotaryValue / 2 < lastRotaryValue) {
-			lastRotaryValue = rotaryValue / 2;
-			direction = UP;
-			delay(150);
-		} else {
-			//direction = NONE;
-		}
-
-	}
-
-	/**
-	 * Klikkeltek?
-	 */
-	bool isClicked(void) {
+		//Gomb lenyomás állapotának kiolvasása
 		ClickEncoder::Button button = ClickEncoder::getButton();
-		if(button != ClickEncoder::Open && button == ClickEncoder::Clicked){
-			return true;
+		result.clicked = button != ClickEncoder::Open && button == ClickEncoder::Clicked;
+
+		//Irány megállapítása
+		rotaryValue += ClickEncoder::getValue();
+
+		int16_t divVal = rotaryValue / ROTARY_ENCODER_DIVIDER;
+
+		if (divVal > lastRotaryValue) {
+			result.direction = UP;
+			lastRotaryValue = divVal;
+			delay(150);
+
+		} else if (divVal < lastRotaryValue) {
+			result.direction = DOWN;
+			lastRotaryValue = divVal;
+			delay(150);
+
+		} else {
+			result.direction = NONE;
 		}
 
-		return false;
+		return result;
 	}
-
 
 };
 

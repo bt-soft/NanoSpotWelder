@@ -84,9 +84,14 @@ volatile boolean isWelding = false;
 //--- Buzzer ---------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- * Sipolás
+ * Sipolás - Ha engedélyezve van
  */
 void buzzer(void) {
+
+	if (!config.configVars.boolBits.bits.beepState) {
+		return;
+	}
+
 	tone(BUZZER_PIN, 1000);
 	delay(500);
 	tone(BUZZER_PIN, 800);
@@ -95,7 +100,7 @@ void buzzer(void) {
 }
 
 /**
- * Riasztás
+ * Riasztási hang
  */
 void buzzerAlarm(void) {
 	tone(BUZZER_PIN, 1000);
@@ -191,8 +196,12 @@ void drawWarningDisplay(float currentMotTemp) {
 
 /**
  * Main display vezérlés
+ * Ha riasztás van, akkor true-val térünk vissza
  */
-void mainDisplayController() {
+bool mainDisplayController() {
+
+	bool alarmed = false;
+
 	if (millis() - lastMiliSec > 1000) {
 
 		//Hõmérséklet lekérése -> csak egy DS18B20 mérõnk van -> 0 az index
@@ -207,6 +216,7 @@ void mainDisplayController() {
 			lastMotTemp = currentMotTemp;
 			drawWarningDisplay(currentMotTemp);
 			buzzerAlarm();
+			alarmed = true;
 
 		} else if (lastMotTemp == -1.0f || abs(lastMotTemp - currentMotTemp) > TEMP_DIFF_TO_DISPLAY) {
 			//Csak az elsõ és a TEMP_DIFF_TO_DISPLAY-nál nagyobb eltérésekre reagálunk
@@ -216,32 +226,34 @@ void mainDisplayController() {
 
 		lastMiliSec = millis();
 	}
+
+	return alarmed;
 }
 
 //--- Menü -----------------------------------------------------------------------------------------------------------------------------------------------
-/**
- * ClickEncoder service hívás
- * ~1msec-enként meg kell hívni, ezt a Timer1 interrupt végzi
- */
-void rotaryEncoderServiceInterrupt(void) {
-	rotaryEncoder->service();
-}
+//
+//
+//
+//
 
-int menuItem = 1;
-int menuFrame = 1;
-int menuPage = 1;
-int lastMenuItem = 1;
+bool isInMenu = true;
+typedef struct MenuViewport_t {
+	byte firstItem;
+	byte lastItem;
+	byte selectedItem;
+} MenuViewPort;
+MenuViewPort menuViewport;
 
-#define MENU_PAGE_SIZE 	3	/* Menu elemekbõl ennyi látszik */
-#define MENUITEMS_CNT 	7	/* Összes menuelemek száma */
-String menuItems[MENUITEMS_CNT];
+#define MENU_VIEWPORT_SIZE 	3	/* Menü elemekbõl ennyi látszik */
+#define LAST_MENUITEM_NDX 	6	/* Az utolsó menüelem indexe, 0-tõl indul */
+String menuItems[LAST_MENUITEM_NDX + 1];
 
 int volume = 50;
 
-String language[3] = { "EN", "ES", "EL" };
+String language[] = { "EN", "ES", "EL" };
 int selectedLanguage = 0;
 
-String difficulty[2] = { "EASY", "HARD" };
+String difficulty[] = { "EASY", "HARD" };
 int selectedDifficulty = 0;
 
 /**
@@ -258,6 +270,10 @@ void initMenuItems() {
 	menuItems[5] = String("Reset");
 	menuItems[6] = String("Exit");
 
+	//viewPort beállítás
+	menuViewport.firstItem = 0;
+	menuViewport.lastItem = MENU_VIEWPORT_SIZE - 1;
+	menuViewport.selectedItem = 0;
 }
 
 /**
@@ -276,7 +292,7 @@ void displayMenuItem(String item, int position, boolean selected) {
 }
 
 /**
- *
+ * String érték megjelenítése
  */
 void displayStringMenuPage(String menuItem, String value) {
 	nokia5110Display.setTextSize(1);
@@ -295,7 +311,7 @@ void displayStringMenuPage(String menuItem, String value) {
 }
 
 /**
- *
+ * Integer érték megjelenítése
  */
 void displayIntMenuPage(String menuItem, int value) {
 	displayStringMenuPage(menuItem, String(value));
@@ -305,211 +321,172 @@ void displayIntMenuPage(String menuItem, int value) {
  *
  */
 void drawMenu() {
-#define LINE_1 15
-#define LINE_2 25
-#define LINE_3 35
+	const byte linePos[] = { 15, 25, 35 };
 
-	if (menuPage == 1) {
-		nokia5110Display.setTextSize(1);
-		nokia5110Display.clearDisplay();
-		nokia5110Display.setTextColor(BLACK, WHITE);
-		nokia5110Display.setCursor(15, 0);
-		nokia5110Display.print("MAIN MENU");
-		nokia5110Display.drawFastHLine(0, 10, 83, BLACK);
+	nokia5110Display.clearDisplay();
+	nokia5110Display.setTextSize(1);
+	nokia5110Display.setTextColor(BLACK, WHITE);
+	nokia5110Display.setCursor(15, 0);
+	nokia5110Display.print("MAIN MENU");
+	nokia5110Display.drawFastHLine(0, 10, 83, BLACK);
 
-		if (menuItem == 1 && menuFrame == 1) {
-			displayMenuItem(menuItems[0], LINE_1, true);
-			displayMenuItem(menuItems[1], LINE_2, false);
-			displayMenuItem(menuItems[2], LINE_3, false);
-		} else if (menuItem == 2 && menuFrame == 1) {
-			displayMenuItem(menuItems[0], LINE_1, false);
-			displayMenuItem(menuItems[1], LINE_2, true);
-			displayMenuItem(menuItems[2], LINE_3, false);
-		} else if (menuItem == 3 && menuFrame == 1) {
-			displayMenuItem(menuItems[0], LINE_1, false);
-			displayMenuItem(menuItems[1], LINE_2, false);
-			displayMenuItem(menuItems[2], LINE_3, true);
-
-		} else if (menuItem == 4 && menuFrame == 2) {
-			displayMenuItem(menuItems[1], LINE_1, false);
-			displayMenuItem(menuItems[2], LINE_2, false);
-			displayMenuItem(menuItems[3], LINE_3, true);
-		} else if (menuItem == 3 && menuFrame == 2) {
-			displayMenuItem(menuItems[1], LINE_1, false);
-			displayMenuItem(menuItems[2], LINE_2, true);
-			displayMenuItem(menuItems[3], LINE_3, false);
-		} else if (menuItem == 2 && menuFrame == 2) {
-			displayMenuItem(menuItems[1], LINE_1, true);
-			displayMenuItem(menuItems[2], LINE_2, false);
-			displayMenuItem(menuItems[3], LINE_3, false);
-
-		} else if (menuItem == 5 && menuFrame == 3) {
-			displayMenuItem(menuItems[2], LINE_1, false);
-			displayMenuItem(menuItems[3], LINE_2, false);
-			displayMenuItem(menuItems[4], LINE_3, true);
-
-		} else if (menuItem == 6 && menuFrame == 4) {
-			displayMenuItem(menuItems[3], LINE_1, false);
-			displayMenuItem(menuItems[4], LINE_2, false);
-			displayMenuItem(menuItems[5], LINE_3, true);
-		} else if (menuItem == 5 && menuFrame == 4) {
-			displayMenuItem(menuItems[3], LINE_1, false);
-			displayMenuItem(menuItems[4], LINE_2, true);
-			displayMenuItem(menuItems[5], LINE_3, false);
-		} else if (menuItem == 4 && menuFrame == 4) {
-			displayMenuItem(menuItems[3], LINE_1, true);
-			displayMenuItem(menuItems[4], LINE_2, false);
-			displayMenuItem(menuItems[5], LINE_3, false);
-
-
-		} else if (menuItem == 3 && menuFrame == 3) {
-			displayMenuItem(menuItems[2], LINE_1, true);
-			displayMenuItem(menuItems[3], LINE_2, false);
-			displayMenuItem(menuItems[4], LINE_3, false);
-		} else if (menuItem == 2 && menuFrame == 2) {
-			displayMenuItem(menuItems[1], LINE_1, true);
-			displayMenuItem(menuItems[2], LINE_2, false);
-			displayMenuItem(menuItems[3], LINE_3, false);
-		} else if (menuItem == 4 && menuFrame == 3) {
-			displayMenuItem(menuItems[2], LINE_1, false);
-			displayMenuItem(menuItems[3], LINE_2, true);
-			displayMenuItem(menuItems[4], LINE_3, false);
-		}
-		nokia5110Display.display();
-
-	} else if (menuPage == 2 && menuItem == 1) {
-		displayIntMenuPage(menuItems[0], config.configVars.contrast);
-	} else if (menuPage == 2 && menuItem == 2) {
-		displayIntMenuPage(menuItems[1], volume);
-	} else if (menuPage == 2 && menuItem == 3) {
-		displayStringMenuPage(menuItems[2], language[selectedLanguage]);
-	} else if (menuPage == 2 && menuItem == 4) {
-		displayStringMenuPage(menuItems[3], difficulty[selectedDifficulty]);
-	} else if (menuPage == 2 && menuItem == 4) {
-		displayStringMenuPage(menuItems[3], difficulty[selectedDifficulty]);
+	for (byte i = 0; i < MENU_VIEWPORT_SIZE; i++) {
+		byte itemNdx = menuViewport.firstItem + i;
+		displayMenuItem(menuItems[itemNdx], linePos[i], itemNdx == menuViewport.selectedItem /* selected? */);
 	}
-
+	nokia5110Display.display();
 }
-bool inMenu = false;
+
 /**
  * Menu kezelése
  */
-void menuController() {
+void menuController(bool rotaryClicked, KY040RotaryEncoder::Direction rotaryDirection) {
 
-	rotaryEncoder->readRotaryEncoder();
+	//Csak a forgatással foglalkozunk
+	if (!rotaryClicked) {
+		if (rotaryDirection == KY040RotaryEncoder::Direction::UP) {
 
-	//ha nem vagyunk a menu-ben
-	if (!inMenu) {
-		//Ha nem klikkeltek ÉS nincs irány, akkor nem megyünk tovább
-		if (!rotaryEncoder->isClicked() && rotaryEncoder->getDirection() == KY040RotaryEncoder::Direction::NONE) {
-			return;
+			//Az utolsó elem a kiválasztott? Ha igen, akkor nem megyünk tovább
+			if (menuViewport.selectedItem == LAST_MENUITEM_NDX) {
+				return;
+			}
+
+			//A következõ menüelem lesz a kiválasztott
+			menuViewport.selectedItem++;
+
+			//A viewport aljánál túljutottunk? Ha igen, akkor scrollozunk egyet lefelé
+			if (menuViewport.selectedItem > menuViewport.lastItem) {
+				menuViewport.firstItem++;
+				menuViewport.lastItem++;
+			}
+
+//		} else if (rotaryDirection == KY040RotaryEncoder::Direction::DOWN) {
+//
+//			//Az elsõ elem a kiválasztott? Ha igen, akkor nem megyünk tovább
+//			if (menuViewport.selectedItem == 0) {
+//				return;
+//			}
+//
+//			//Az elõzõ menüelem lesz a kiválasztott
+//			menuViewport.selectedItem--;
+//
+//			//A viewport aljánál túljutottunk? Ha igen, akkor scrollozunk egyet lefelé
+//			if (menuViewport.selectedItem < menuViewport.firstItem) {
+//				menuViewport.firstItem--;
+//				menuViewport.lastItem--;
+//			}
 		}
 	}
 
-	inMenu = true;
+	//Kikk események feldolgozása
+	if (rotaryClicked) {
+		if(menuViewport.selectedItem  == LAST_MENUITEM_NDX){ //exit?
+			isInMenu = false; //Kilépünk a menübõl
+		}
+	}
+
+
 	drawMenu();
-	KY040RotaryEncoder::Direction direction = rotaryEncoder->getDirection();
-	boolean isClicked = isClicked = rotaryEncoder->isClicked();
 
-	bool changed = false;
-
-	if (direction == KY040RotaryEncoder::Direction::UP) {
-		if (menuPage == 1) {
-
-			if (menuItem == 2 && menuFrame == 2) {
-				menuFrame--;
-			}
-
-			if (menuItem == 4 && menuFrame == 4) {
-				menuFrame--;
-			}
-			if (menuItem == 3 && menuFrame == 3) {
-				menuFrame--;
-			}
-			lastMenuItem = menuItem;
-			menuItem--;
-			if (menuItem == 0) {
-				menuItem = 1;
-			}
-		} else if (menuPage == 2 && menuItem == 1) {
-			config.configVars.contrast++;
-			nokia5110Display.setContrast(config.configVars.contrast);
-			changed = true;
-		} else if (menuPage == 2 && menuItem == 2) {
-			volume++;
-		} else if (menuPage == 2 && menuItem == 3) {
-			selectedLanguage++;
-			if (selectedLanguage == 3) {
-				selectedLanguage = 0;
-			}
-		} else if (menuPage == 2 && menuItem == 4) {
-			selectedDifficulty++;
-			if (selectedDifficulty == 2) {
-				selectedDifficulty = 0;
-			}
-
-		}
-	} else if (direction == KY040RotaryEncoder::Direction::DOWN) {
-		//We have turned the Rotary Encoder Clockwise
-		if (menuPage == 1) {
-
-			if (menuItem == 3 && lastMenuItem == 2) {
-				menuFrame++;
-			} else if (menuItem == 4 && lastMenuItem == 3) {
-				menuFrame++;
-			} else if (menuItem == 5 && lastMenuItem == 4 && menuFrame != 4) {
-				menuFrame++;
-			}
-			lastMenuItem = menuItem;
-			menuItem++;
-			if (menuItem == 7) {
-				menuItem--;
-			}
-
-		} else if (menuPage == 2 && menuItem == 1) {
-			config.configVars.contrast--;
-			nokia5110Display.setContrast(config.configVars.contrast);
-			changed = true;
-		} else if (menuPage == 2 && menuItem == 2) {
-			volume--;
-		} else if (menuPage == 2 && menuItem == 3) {
-
-			selectedLanguage--;
-			if (selectedLanguage == -1) {
-				selectedLanguage = 2;
-			}
-		} else if (menuPage == 2 && menuItem == 4) {
-			selectedDifficulty--;
-			if (selectedDifficulty == -1) {
-				selectedDifficulty = 1;
-			}
-		}
-	} else if (isClicked) { //Middle Button is Pressed
-
-		// Backlight Control
-		if (menuPage == 1 && menuItem == 5) {
-			config.configVars.boolBits.bits.blackLightState = !config.configVars.boolBits.bits.blackLightState;
-			sprintf(tempBuff, "Light:%s", !config.configVars.boolBits.bits.blackLightState ? "ON" : "OFF");
-			menuItems[4] = String(tempBuff);
-
-			changed = true;
-			nokia5110Display.setBlackLightState(config.configVars.boolBits.bits.blackLightState);
-		}
-
-		// Reset
-		if (menuPage == 1 && menuItem == 6) {
-			config.createDefaultConfig();
-		} else if (menuPage == 1 && menuItem <= 4) {
-			menuPage = 2;
-		} else if (menuPage == 2) {
-			menuPage = 1;
-		}
-	}
-
-	//ha vátoztattak az értékeken, akkor mentünk egyet
-	if (changed) {
-		config.save();
-	}
+//	bool changed = false;
+//
+//	if (direction == KY040RotaryEncoder::Direction::UP) {
+//		if (menuPage == 1) {
+//
+//			if (selectedMenuItem == 2 && menuFrame == 2) {
+//				menuFrame--;
+//			}
+//
+//			if (selectedMenuItem == 4 && menuFrame == 4) {
+//				menuFrame--;
+//			}
+//			if (selectedMenuItem == 3 && menuFrame == 3) {
+//				menuFrame--;
+//			}
+//			lastMenuItem = selectedMenuItem;
+//			selectedMenuItem--;
+//			if (selectedMenuItem == 0) {
+//				selectedMenuItem = 1;
+//			}
+//		} else if (menuPage == 2 && selectedMenuItem == 1) {
+//			config.configVars.contrast++;
+//			nokia5110Display.setContrast(config.configVars.contrast);
+//			changed = true;
+//		} else if (menuPage == 2 && selectedMenuItem == 2) {
+//			volume++;
+//		} else if (menuPage == 2 && selectedMenuItem == 3) {
+//			selectedLanguage++;
+//			if (selectedLanguage == 3) {
+//				selectedLanguage = 0;
+//			}
+//		} else if (menuPage == 2 && selectedMenuItem == 4) {
+//			selectedDifficulty++;
+//			if (selectedDifficulty == 2) {
+//				selectedDifficulty = 0;
+//			}
+//
+//		}
+//	} else if (direction == KY040RotaryEncoder::Direction::DOWN) {
+//		//We have turned the Rotary Encoder Clockwise
+//		if (menuPage == 1) {
+//
+//			if (selectedMenuItem == 3 && lastMenuItem == 2) {
+//				menuFrame++;
+//			} else if (selectedMenuItem == 4 && lastMenuItem == 3) {
+//				menuFrame++;
+//			} else if (selectedMenuItem == 5 && lastMenuItem == 4 && menuFrame != 4) {
+//				menuFrame++;
+//			}
+//			lastMenuItem = selectedMenuItem;
+//			selectedMenuItem++;
+//			if (selectedMenuItem == 7) {
+//				selectedMenuItem--;
+//			}
+//
+//		} else if (menuPage == 2 && selectedMenuItem == 1) {
+//			config.configVars.contrast--;
+//			nokia5110Display.setContrast(config.configVars.contrast);
+//			changed = true;
+//		} else if (menuPage == 2 && selectedMenuItem == 2) {
+//			volume--;
+//		} else if (menuPage == 2 && selectedMenuItem == 3) {
+//
+//			selectedLanguage--;
+//			if (selectedLanguage == -1) {
+//				selectedLanguage = 2;
+//			}
+//		} else if (menuPage == 2 && selectedMenuItem == 4) {
+//			selectedDifficulty--;
+//			if (selectedDifficulty == -1) {
+//				selectedDifficulty = 1;
+//			}
+//		}
+//	} else if (isClicked) { //Middle Button is Pressed
+//
+//		// Backlight Control
+//		if (menuPage == 1 && selectedMenuItem == 5) {
+//			config.configVars.boolBits.bits.blackLightState = !config.configVars.boolBits.bits.blackLightState;
+//			sprintf(tempBuff, "Light:%s", !config.configVars.boolBits.bits.blackLightState ? "ON" : "OFF");
+//			menuItems[4] = String(tempBuff);
+//
+//			changed = true;
+//			nokia5110Display.setBlackLightState(config.configVars.boolBits.bits.blackLightState);
+//		}
+//
+//		// Reset
+//		if (menuPage == 1 && selectedMenuItem == 6) {
+//			config.createDefaultConfig();
+//		} else if (menuPage == 1 && selectedMenuItem <= 4) {
+//			menuPage = 2;
+//		} else if (menuPage == 2) {
+//			menuPage = 1;
+//		}
+//	}
+//
+//ha vátoztattak az értékeken, akkor mentünk egyet
+//	if (changed) {
+//		config.save();
+//	}
 }
 
 //--- Spot Welding ---------------------------------------------------------------------------------------------------------------------------------------
@@ -552,6 +529,14 @@ void weldButtonPushed(void) {
 	isWelding = false;
 }
 
+/**
+ * ClickEncoder service hívás
+ * ~1msec-enként meg kell hívni, ezt a Timer1 interrupt végzi
+ */
+void rotaryEncoderServiceInterrupt(void) {
+	rotaryEncoder->service();
+}
+
 //--------------------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
@@ -569,13 +554,14 @@ void setup() {
 	//--- Display
 	nokia5110Display.setBlackLightPin(LCD_BLACKLIGHT_PIN);
 	nokia5110Display.setContrast(config.configVars.contrast);	//kontraszt
-	nokia5110Display.setBlackLightState(config.configVars.boolBits.bits.blackLightState); //háttérvilágítás
+	nokia5110Display.setBlackLightState(config.configVars.boolBits.bits.blackLightState);	//háttérvilágítás
 	drawSplashScreen();
 
 	//--- Rotary Encoder felhúzása
 	rotaryEncoder = new KY040RotaryEncoder(A0, A1, A2);
 	rotaryEncoder->setAccelerationEnabled(false);
-	//rotaryEncoder->setDoubleClickEnabled(true);
+	rotaryEncoder->setDoubleClickEnabled(true);
+	rotaryEncoder->init();
 
 	//--- ClickEncoder timer felhúzása
 	Timer1.initialize(ROTARY_ENCODER_SERVICE_INTERVAL_IN_USEC);
@@ -602,7 +588,8 @@ void setup() {
 	//idõmérés indul
 	lastMiliSec = millis();
 
-//	buzzer();
+	//Beepelünk, ha engedélyezve van
+	buzzer();
 }
 
 /**
@@ -621,9 +608,17 @@ void loop() {
 	weldButtonPrevState = weldButtonCurrentState;
 	//------------------------------------------------------------------------------------------
 
-	mainDisplayController();
+	if (!isInMenu) {
+		mainDisplayController();
+	}
 
-	menuController();
+	//Rotary encoder olvasása
+	KY040RotaryEncoder::KY040RotaryEncoderResult rotaryEncoderResult = rotaryEncoder->readRotaryEncoder();
+	//delay(510);
 
+	//Ha klikkeltek VAGY van irány, akkor a menüt piszkáljuk
+	if (rotaryEncoderResult.clicked || rotaryEncoderResult.direction != KY040RotaryEncoder::Direction::NONE) {
+		menuController(rotaryEncoderResult.clicked, rotaryEncoderResult.direction);
+	}
 }
 
