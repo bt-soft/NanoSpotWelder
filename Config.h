@@ -22,24 +22,25 @@ class Config {
 
 public:
 
-	//A boolean változókat összelapátoljuk egy byte-ba
-	typedef struct bits_t {
-		bool blackLightState :1;
-		bool beepState :1;
-		bool b2 :1;
-		bool b3 :1;
-		bool b4 :1;
-		bool b5 :1;
-		bool b6 :1;
-		bool b7 :1;
-	} BitsT;
+	/**
+	 * Kell menteni a konfig-et?
+	 */
+	bool wantSaveConfig = false;
+
+//	//A boolean változókat összelapátoljuk egy byte-ba
+//	typedef struct bits_t {
+//		bool blackLightState :1;bool beepState :1;bool b2 :1;bool b3 :1;bool b4 :1;bool b5 :1;bool b6 :1;bool b7 :1;
+//	} BitsT;
 
 	//Konfigurációs típus deklaráció
 	typedef struct config_t {
 		unsigned char version[NSP_VERSION_SIZE];
 
 		//BoolBits boolBits;
-		BitsT bits;
+		//BitsT bits;
+
+		bool blackLightState;
+		bool beepState;
 
 		uint8_t contrast;
 		uint8_t preWeldPulseCnt;
@@ -64,8 +65,8 @@ public:
 		memcpy(&configVars.version, NSP_VERSION, NSP_VERSION_SIZE);
 
 		//BitMap
-		configVars.bits.blackLightState = DEF_BACKLIGHT_STATE;
-		configVars.bits.beepState = DEF_BEEP_STATE;
+		configVars.blackLightState = DEF_BACKLIGHT_STATE;
+		configVars.beepState = DEF_BEEP_STATE;
 
 		//LCD
 		configVars.contrast = DEF_CONTRAST;
@@ -102,6 +103,7 @@ public:
 	void save(void) {
 		//le is mentjük
 		EEPROM.put(0, configVars);
+		wantSaveConfig = false;
 	}
 
 };
