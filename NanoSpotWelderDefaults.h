@@ -9,8 +9,8 @@
 #define NANOSPOTWELDERDEFAULTS_H_
 
 #define DEF_CONTRAST			40 		/* LCD kontraszt */
-#define DEF_BEEP_STATE			0  	/* Beep */
-#define DEF_BACKLIGHT_STATE		0 	/* LCD háttérvilágítás */
+#define DEF_BEEP_STATE			false  	/* Beep */
+#define DEF_BACKLIGHT_STATE		false 	/* LCD háttérvilágítás */
 
 #define DEF_PREWELD_PULSE_CNT 	1 		/*  1 periódus: 100Hz -> 10ms */
 #define DEF_PAUSE_PULSE_CNT 	50 		/* 500msec */

@@ -72,12 +72,6 @@ public:
 	 */
 	KY040RotaryEncoder(uint8_t A, uint8_t B, uint8_t BTN = -1, uint8_t stepsPerNotch = 1, bool active = LOW) :
 			ClickEncoder(A, B, BTN, stepsPerNotch, active) {
-	}
-
-	/**
-	 * A rotary encoder kezdõértékének kiolvasása
-	 */
-	void init(void) {
 		lastRotaryValue = ClickEncoder::getValue();
 	}
 
@@ -87,10 +81,11 @@ public:
 	KY040RotaryEncoderResult readRotaryEncoder(void) {
 
 		KY040RotaryEncoderResult result;
+		result.direction = NONE;
 
 		//Gomb lenyomás állapotának kiolvasása
 		ClickEncoder::Button button = ClickEncoder::getButton();
-		result.clicked = button != ClickEncoder::Open && button == ClickEncoder::Clicked;
+		result.clicked = (button != ClickEncoder::Open && button == ClickEncoder::Clicked);
 
 		//Irány megállapítása
 		rotaryValue += ClickEncoder::getValue();
@@ -98,17 +93,14 @@ public:
 		int16_t divVal = rotaryValue / ROTARY_ENCODER_DIVIDER;
 
 		if (divVal > lastRotaryValue) {
-			result.direction = UP;
-			lastRotaryValue = divVal;
-			delay(150);
-
-		} else if (divVal < lastRotaryValue) {
 			result.direction = DOWN;
 			lastRotaryValue = divVal;
 			delay(150);
 
-		} else {
-			result.direction = NONE;
+		} else if (divVal < lastRotaryValue) {
+			result.direction = UP;
+			lastRotaryValue = divVal;
+			delay(150);
 		}
 
 		return result;

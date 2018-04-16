@@ -22,29 +22,24 @@ class Config {
 
 public:
 
-	//A boolean változóket összelapátoljuk egy byte-ba
+	//A boolean változókat összelapátoljuk egy byte-ba
 	typedef struct bits_t {
-		unsigned char blackLightState :1;
-		unsigned char beepState :1;
-		unsigned char b2 :1;
-		unsigned char b3 :1;
-		unsigned char b4 :1;
-		unsigned char b5 :1;
-		unsigned char b6 :1;
-		unsigned char b7 :1;
+		bool blackLightState :1;
+		bool beepState :1;
+		bool b2 :1;
+		bool b3 :1;
+		bool b4 :1;
+		bool b5 :1;
+		bool b6 :1;
+		bool b7 :1;
 	} BitsT;
-
-	//Uniont húzunk rá, hogy egy mûvelettel tudjuk az EEprom-ban kezelni
-	typedef union BoolBits {
-		BitsT bits;
-		unsigned char byte;
-	};
 
 	//Konfigurációs típus deklaráció
 	typedef struct config_t {
 		unsigned char version[NSP_VERSION_SIZE];
 
-		BoolBits boolBits;
+		//BoolBits boolBits;
+		BitsT bits;
 
 		uint8_t contrast;
 		uint8_t preWeldPulseCnt;
@@ -69,8 +64,8 @@ public:
 		memcpy(&configVars.version, NSP_VERSION, NSP_VERSION_SIZE);
 
 		//BitMap
-		configVars.boolBits.bits.blackLightState = DEF_BACKLIGHT_STATE;
-		configVars.boolBits.bits.beepState = DEF_BEEP_STATE;
+		configVars.bits.blackLightState = DEF_BACKLIGHT_STATE;
+		configVars.bits.beepState = DEF_BEEP_STATE;
 
 		//LCD
 		configVars.contrast = DEF_CONTRAST;

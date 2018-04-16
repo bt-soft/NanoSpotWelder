@@ -88,7 +88,7 @@ volatile boolean isWelding = false;
  */
 void buzzer(void) {
 
-	if (!config.configVars.boolBits.bits.beepState) {
+	if (!config.configVars.bits.beepState) {
 		return;
 	}
 
@@ -111,6 +111,16 @@ void buzzerAlarm(void) {
 	delay(300);
 	noTone(BUZZER_PIN);
 }
+
+/**
+ * menu hang
+ */
+void buzzerMenu(){
+	tone(BUZZER_PIN, 800);
+	delay(10);
+	noTone(BUZZER_PIN);
+}
+
 
 //--- Fõképernyõ -----------------------------------------------------------------------------------------------------------------------------------------
 /**
@@ -236,7 +246,7 @@ bool mainDisplayController() {
 //
 //
 
-bool isInMenu = true;
+bool isInMenu = false;
 typedef struct MenuViewport_t {
 	byte firstItem;
 	byte lastItem;
@@ -265,7 +275,7 @@ void initMenuItems() {
 	menuItems[1] = String("Volume");
 	menuItems[2] = String("Language");
 	menuItems[3] = String("Difficulty");
-	sprintf(tempBuff, "Light:%s", !config.configVars.boolBits.bits.blackLightState ? "ON" : "OFF");
+	sprintf(tempBuff, "Light:%s", !config.configVars.bits.blackLightState ? "ON" : "OFF");
 	menuItems[4] = String(tempBuff);
 	menuItems[5] = String("Reset");
 	menuItems[6] = String("Exit");
@@ -344,6 +354,7 @@ void menuController(bool rotaryClicked, KY040RotaryEncoder::Direction rotaryDire
 
 	//Csak a forgatással foglalkozunk
 	if (!rotaryClicked) {
+
 		if (rotaryDirection == KY040RotaryEncoder::Direction::UP) {
 
 			//Az utolsó elem a kiválasztott? Ha igen, akkor nem megyünk tovább
@@ -360,28 +371,28 @@ void menuController(bool rotaryClicked, KY040RotaryEncoder::Direction rotaryDire
 				menuViewport.lastItem++;
 			}
 
-//		} else if (rotaryDirection == KY040RotaryEncoder::Direction::DOWN) {
-//
-//			//Az elsõ elem a kiválasztott? Ha igen, akkor nem megyünk tovább
-//			if (menuViewport.selectedItem == 0) {
-//				return;
-//			}
-//
-//			//Az elõzõ menüelem lesz a kiválasztott
-//			menuViewport.selectedItem--;
-//
-//			//A viewport aljánál túljutottunk? Ha igen, akkor scrollozunk egyet lefelé
-//			if (menuViewport.selectedItem < menuViewport.firstItem) {
-//				menuViewport.firstItem--;
-//				menuViewport.lastItem--;
-//			}
-		}
-	}
+		} else if (rotaryDirection == KY040RotaryEncoder::Direction::DOWN) {
 
-	//Kikk események feldolgozása
-	if (rotaryClicked) {
+			//Az elsõ elem a kiválasztott? Ha igen, akkor nem megyünk tovább
+			if (menuViewport.selectedItem == 0) {
+				return;
+			}
+
+			//Az elõzõ menüelem lesz a kiválasztott
+			menuViewport.selectedItem--;
+
+			//A viewport aljánál túljutottunk? Ha igen, akkor scrollozunk egyet lefelé
+			if (menuViewport.selectedItem < menuViewport.firstItem) {
+				menuViewport.firstItem--;
+				menuViewport.lastItem--;
+			}
+
+		}
+	} else {
+		//Kikk események feldolgozása
 		if(menuViewport.selectedItem  == LAST_MENUITEM_NDX){ //exit?
 			isInMenu = false; //Kilépünk a menübõl
+			return;
 		}
 	}
 
@@ -533,7 +544,7 @@ void weldButtonPushed(void) {
  * ClickEncoder service hívás
  * ~1msec-enként meg kell hívni, ezt a Timer1 interrupt végzi
  */
-void rotaryEncoderServiceInterrupt(void) {
+void rotaryEncoderTimer1ServiceInterrupt(void) {
 	rotaryEncoder->service();
 }
 
@@ -554,18 +565,17 @@ void setup() {
 	//--- Display
 	nokia5110Display.setBlackLightPin(LCD_BLACKLIGHT_PIN);
 	nokia5110Display.setContrast(config.configVars.contrast);	//kontraszt
-	nokia5110Display.setBlackLightState(config.configVars.boolBits.bits.blackLightState);	//háttérvilágítás
+	nokia5110Display.setBlackLightState(config.configVars.bits.blackLightState);	//háttérvilágítás
 	drawSplashScreen();
 
 	//--- Rotary Encoder felhúzása
 	rotaryEncoder = new KY040RotaryEncoder(A0, A1, A2);
 	rotaryEncoder->setAccelerationEnabled(false);
 	rotaryEncoder->setDoubleClickEnabled(true);
-	rotaryEncoder->init();
 
 	//--- ClickEncoder timer felhúzása
 	Timer1.initialize(ROTARY_ENCODER_SERVICE_INTERVAL_IN_USEC);
-	Timer1.attachInterrupt(rotaryEncoderServiceInterrupt);
+	Timer1.attachInterrupt(rotaryEncoderTimer1ServiceInterrupt);
 
 	//Weld button
 	pinMode(WELD_BUTTON_PIN, INPUT);
@@ -609,6 +619,7 @@ void loop() {
 	//------------------------------------------------------------------------------------------
 
 	if (!isInMenu) {
+		lastMotTemp = -1.0f; //kirõszakoljuk a mainScren kiíratását
 		mainDisplayController();
 	}
 
@@ -618,6 +629,12 @@ void loop() {
 
 	//Ha klikkeltek VAGY van irány, akkor a menüt piszkáljuk
 	if (rotaryEncoderResult.clicked || rotaryEncoderResult.direction != KY040RotaryEncoder::Direction::NONE) {
+		buzzerMenu();
+
+		//klikkre lépünk be a menübe
+		if(rotaryEncoderResult.clicked && !isInMenu){
+			isInMenu = true;
+		}
 		menuController(rotaryEncoderResult.clicked, rotaryEncoderResult.direction);
 	}
 }
