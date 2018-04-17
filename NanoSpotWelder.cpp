@@ -183,7 +183,7 @@ void drawMainDisplay(float currentMotTemp) {
 }
 
 /**
- * Magas hõmérséklet risztás
+ * Magas hõmérséklet riasztás
  */
 void drawWarningDisplay(float currentMotTemp) {
 	nokia5110Display.clearDisplay();
