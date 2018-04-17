@@ -77,7 +77,7 @@ uint8_t ky040 :: dtPin_3 = 0;		// initalize to invalid pins
  * malloc's, and realloc's later. Does this fix all problems? Can the
  * user try to create rotaries later? No and Yes.
  */
-ky040 :: ky040 ( uint8_t interruptClkPin, uint8_t dtPin, uint8_t switchPin,
+ky040 :: ky040 ( uint8_t interruptClkPin, uint8_t dtPin, uint8_t switchPin, // @suppress("Class members should be properly initialized")
 				 uint8_t maxRotarys ) {
 	/* Checks for valid interrupt pin */
 	params = 0;		// null until valid clock pin specified and then malloc'd
