@@ -72,7 +72,7 @@ char tempBuff[64];
 #define DEGREE_SYMBOL_CODE 247
 
 //------------------- Spot welding paraméterek
-#define ZCD_PIN 			2	/* Zero Cross Detection PIN, megszakításban */
+#define ZCD_PIN 			2		/* Zero Cross Detection PIN, megszakításban */
 #define TRIAC_PIN 			12 		/* D12 Triac/MOC vezérlés PIN */
 #define WELD_LED_PIN 		11		/* D11 Hegesztés LED visszajelzés */
 #define WELD_BUTTON_PIN 	10 		/* D10 Hegesztés gomb */
