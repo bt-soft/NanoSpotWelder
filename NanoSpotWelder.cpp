@@ -69,7 +69,7 @@ Nokia5110Display nokia5110Display = Nokia5110Display(8, 7, 6, 5, 4); //Software 
 // -- Runtime adatok
 long lastMiliSecForTempMeasure = -1;
 char tempBuff[64];
-#define DEGREE_SYMBOL_CODE 247
+#define DEGREE_SYMBOL_CODE 247		/* Az LCD-n a '°' jel kódja */
 
 //------------------- Spot welding paraméterek
 #define ZCD_PIN 			2		/* Zero Cross Detection PIN, megszakításban */

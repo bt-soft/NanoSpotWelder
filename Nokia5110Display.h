@@ -72,16 +72,6 @@ public:
 		digitalWrite(blackLightPin, state ? HIGH : LOW);
 	}
 
-
-	/**
-	 * Háttérvilágítás toggle
-	 */
-	void toggleBlackLight(void) {
-		if (blackLightPin != -1) {
-			digitalWrite(blackLightPin, !digitalRead(blackLightPin));
-		}
-	}
-
 };
 
 #endif /* NOKIA5110DISPLAY_H_ */

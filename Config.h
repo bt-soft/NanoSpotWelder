@@ -88,7 +88,7 @@ public:
 	void read() {
 		EEPROM.get(0, configVars);
 
-		//Érvények konfig van az EEprom-ban?
+		//Érvényes konfig van az EEprom-ban?
 		if (memcmp(configVars.version, NSP_VERSION, NSP_VERSION_SIZE) != 0) {
 
 			//nem -> legyártjuk a default konfigot
