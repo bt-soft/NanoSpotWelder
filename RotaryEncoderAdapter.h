@@ -52,7 +52,7 @@ class RotaryEncoderAdapter: public ky040 {
 			// Lépés: 2
 			// Kezdeti érték: 0
 			// Túlhajtás: nem
-			ky040::AddRotaryCounter(ROTARY_ID1, 0, -50, 50, 2, true /*rollOver*/);
+			ky040::AddRotaryCounter(ROTARY_ID1, 0, -255, 255, 1, true /*rollOver*/);
 			ky040::SetRotary(ROTARY_ID1);
 			lastRotaryValue = ky040::GetRotaryValue(ROTARY_ID1);
 		}
