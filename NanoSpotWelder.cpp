@@ -67,7 +67,7 @@ Nokia5110Display nokia5110Display = Nokia5110Display(8, 7, 6, 5, 4); //Software 
 #define LCD_BLACKLIGHT_PIN 		9
 
 // -- Runtime adatok
-long lastMiliSecForTempMeasure = -1;
+long lastMiliSec = -1;				// hõmérséklet mmérésre, menü tétlenségi idõ detektálása*/
 char tempBuff[64];
 #define DEGREE_SYMBOL_CODE 247		/* Az LCD-n a '°' jel kódja */
 
@@ -86,7 +86,7 @@ volatile boolean isWelding = false;
 //------------------- Beeper
 #define BUZZER_PIN 				13
 
-//--- Buzzer ---------------------------------------------------------------------------------------------------------------------------------------------
+//--- --------------- Buzzer
 
 /**
  * Sipolás - Ha engedélyezve van
@@ -126,7 +126,7 @@ void buzzerMenu() {
 	noTone(BUZZER_PIN);
 }
 
-//--- Fõképernyõ -----------------------------------------------------------------------------------------------------------------------------------------
+//------------------------- Menu
 /**
  * Splash képernyõ
  */
@@ -214,9 +214,9 @@ void drawWarningDisplay(float currentMotTemp) {
  */
 bool mainDisplayController() {
 
-	bool alarmed = false;
+	bool highTemp = false;
 
-	if (millis() - lastMiliSecForTempMeasure > 1000) {
+	if ((millis() - lastMiliSec) > 1000) {
 
 		//Hõmérséklet lekérése -> csak egy DS18B20 mérõnk van -> 0 az index
 		tempSensors.requestTemperaturesByIndex(MOT_TEMP_SENSOR_NDX);
@@ -230,7 +230,7 @@ bool mainDisplayController() {
 			lastMotTemp = currentMotTemp;
 			drawWarningDisplay(currentMotTemp);
 			buzzerAlarm();
-			alarmed = true;
+			highTemp = true;
 
 		} else if (lastMotTemp == -1.0f || abs(lastMotTemp - currentMotTemp) > TEMP_DIFF_TO_DISPLAY) {
 			//Csak az elsõ és a TEMP_DIFF_TO_DISPLAY-nál nagyobb eltérésekre reagálunk
@@ -238,14 +238,11 @@ bool mainDisplayController() {
 			drawMainDisplay(currentMotTemp);
 		}
 
-		lastMiliSecForTempMeasure = millis();
+		lastMiliSec = millis();
 	}
 
-	return alarmed;
+	return highTemp;
 }
-
-//--- Menü -----------------------------------------------------------------------------------------------------------------------------------------------
-//
 
 typedef enum MenuState_t {
 	OFF,	//Nem látható
@@ -257,9 +254,9 @@ MenuState_t menuState = OFF;
 
 const byte MENU_VIEVPORT_LINEPOS[] = { 15, 25, 35 };
 typedef struct MenuViewport_t {
-	byte firstItem;
-	byte lastItem;
-	byte selectedItem;
+		byte firstItem;
+		byte lastItem;
+		byte selectedItem;
 } MenuViewPortT;
 MenuViewPortT menuViewport;
 #define MENU_VIEWPORT_SIZE 	3	/* Menü elemekbõl ennyi látszik */
@@ -271,15 +268,18 @@ typedef enum valueType_t {
 
 typedef void (*voidFuncPtr)(void);
 typedef struct MenuItem_t {
-	String title;					// Menüfelirat
-	valueType_t valueType;			// Érték típus
-	void *valuePtr;					// Az érték pointere
-	byte minValue;					// Minimális numerikus érték
-	byte maxValue;					// Maximális numerikus érték
-	voidFuncPtr callbackFunct; 		// Egyéb mûveletek függvény pointere, vagy NULL, ha nincs
+		String title;					// Menüfelirat
+		valueType_t valueType;			// Érték típus
+		void *valuePtr;					// Az érték pointere
+		byte minValue;					// Minimális numerikus érték
+		byte maxValue;					// Maximális numerikus érték
+		voidFuncPtr callbackFunct; 		// Egyéb mûveletek függvény pointere, vagy NULL, ha nincs
 } MenuItemT;
 #define LAST_MENUITEM_NDX 	8 /* Az utolsó menüelem indexe, 0-tól indul */
 MenuItemT menuItems[LAST_MENUITEM_NDX + 1];
+
+//Menü inaktivitási idõ másodpercben
+#define MENU_INACTIVE_IN_MSEC			(30 * 1000)
 
 /**
  * Menü alapállapotba
@@ -399,13 +399,13 @@ void drawMenuItemValue() {
 
 	//Típus szerinti kiírás
 	switch (p.valueType) {
-	case BOOL:
-		dspValue = *(bool *) p.valuePtr ? "ON" : "OFF";
-		break;
+		case BOOL:
+			dspValue = *(bool *) p.valuePtr ? "ON" : "OFF";
+			break;
 
-	case BYTE:
-		dspValue = String(*(byte *) p.valuePtr);
-		break;
+		case BYTE:
+			dspValue = String(*(byte *) p.valuePtr);
+			break;
 	}
 
 	nokia5110Display.clearDisplay();
@@ -442,34 +442,34 @@ void itemMenuController(bool rotaryClicked, RotaryEncoderAdapter::Direction rota
 
 		switch (rotaryDirection) {
 
-		case RotaryEncoderAdapter::Direction::UP:
+			case RotaryEncoderAdapter::Direction::UP:
 
-			if (p.valueType == BYTE) {
-				if (*(byte *) p.valuePtr < p.maxValue) {
-					(*(byte *) p.valuePtr)++;
+				if (p.valueType == BYTE) {
+					if (*(byte *) p.valuePtr < p.maxValue) {
+						(*(byte *) p.valuePtr)++;
+					}
+				} else if (p.valueType == BOOL) {
+					if (!*(bool *) p.valuePtr) { //ha most false, akkor true-t csinálunk belõle
+						*(bool *) p.valuePtr = true;
+					}
 				}
-			} else if (p.valueType == BOOL) {
-				if (!*(bool *) p.valuePtr) { //ha most false, akkor true-t csinálunk belõle
-					*(bool *) p.valuePtr = true;
-				}
-			}
-			break;
+				break;
 
-		case RotaryEncoderAdapter::Direction::DOWN:
-			if (p.valueType == BYTE) {
-				if (*(byte *) p.valuePtr > p.minValue) {
-					(*(byte *) p.valuePtr)--;
+			case RotaryEncoderAdapter::Direction::DOWN:
+				if (p.valueType == BYTE) {
+					if (*(byte *) p.valuePtr > p.minValue) {
+						(*(byte *) p.valuePtr)--;
+					}
+				} else if (p.valueType == BOOL) {
+					if (*(bool *) p.valuePtr) { //ha most true, akkor false-t csinálunk belõle
+						*(bool *) p.valuePtr = false;
+					}
 				}
-			} else if (p.valueType == BOOL) {
-				if (*(bool *) p.valuePtr) { //ha most true, akkor false-t csinálunk belõle
-					*(bool *) p.valuePtr = false;
-				}
-			}
-			break;
+				break;
 
-		case RotaryEncoderAdapter::Direction::NONE:
-			//Csak kirajzoltatást kértek
-			break;
+			case RotaryEncoderAdapter::Direction::NONE:
+				//Csak kirajzoltatást kértek
+				break;
 		}
 
 		//Menuelem beálító képernyõ kirajzoltatása
@@ -502,42 +502,42 @@ void mainMenuController(bool rotaryClicked, RotaryEncoderAdapter::Direction rota
 	if (!rotaryClicked) {
 
 		switch (rotaryDirection) {
-		case RotaryEncoderAdapter::Direction::UP:
+			case RotaryEncoderAdapter::Direction::UP:
 
-			//Az utolsó elem a kiválasztott? Ha igen, akkor nem megyünk tovább
-			if (menuViewport.selectedItem == LAST_MENUITEM_NDX) {
+				//Az utolsó elem a kiválasztott? Ha igen, akkor nem megyünk tovább
+				if (menuViewport.selectedItem == LAST_MENUITEM_NDX) {
+					return;
+				}
+
+				//A következõ menüelem lesz a kiválasztott
+				menuViewport.selectedItem++;
+
+				//A viewport aljánál túljutottunk? Ha igen, akkor scrollozunk egyet lefelé
+				if (menuViewport.selectedItem > menuViewport.lastItem) {
+					menuViewport.firstItem++;
+					menuViewport.lastItem++;
+				}
+				break;
+
+			case RotaryEncoderAdapter::Direction::DOWN:
+
+				//Az elsõ elem a kiválasztott? Ha igen, akkor nem megyünk tovább
+				if (menuViewport.selectedItem == 0) {
+					return;
+				}
+
+				//Az elõzõ menüelem lesz a kiválasztott
+				menuViewport.selectedItem--;
+
+				//A viewport aljánál túljutottunk? Ha igen, akkor scrollozunk egyet lefelé
+				if (menuViewport.selectedItem < menuViewport.firstItem) {
+					menuViewport.firstItem--;
+					menuViewport.lastItem--;
+				}
+				break;
+
+			default:
 				return;
-			}
-
-			//A következõ menüelem lesz a kiválasztott
-			menuViewport.selectedItem++;
-
-			//A viewport aljánál túljutottunk? Ha igen, akkor scrollozunk egyet lefelé
-			if (menuViewport.selectedItem > menuViewport.lastItem) {
-				menuViewport.firstItem++;
-				menuViewport.lastItem++;
-			}
-			break;
-
-		case RotaryEncoderAdapter::Direction::DOWN:
-
-			//Az elsõ elem a kiválasztott? Ha igen, akkor nem megyünk tovább
-			if (menuViewport.selectedItem == 0) {
-				return;
-			}
-
-			//Az elõzõ menüelem lesz a kiválasztott
-			menuViewport.selectedItem--;
-
-			//A viewport aljánál túljutottunk? Ha igen, akkor scrollozunk egyet lefelé
-			if (menuViewport.selectedItem < menuViewport.firstItem) {
-				menuViewport.firstItem--;
-				menuViewport.lastItem--;
-			}
-			break;
-
-		default:
-			return;
 		}
 
 		drawMainMenu();
@@ -555,17 +555,17 @@ void mainMenuController(bool rotaryClicked, RotaryEncoderAdapter::Direction rota
 
 	//Típus szerint megyünk tovább
 	switch (p.valueType) {
-	//Ha ez egy értékbeállító almenü
-	case BOOL:
-	case BYTE:
-		menuState = ITEM_MENU;
-		itemMenuController(false, RotaryEncoderAdapter::Direction::NONE); //Kérünk egy menüelem beállító képernyõ kirajzolást
-		break;
+		//Ha ez egy értékbeállító almenü
+		case BOOL:
+		case BYTE:
+			menuState = ITEM_MENU;
+			itemMenuController(false, RotaryEncoderAdapter::Direction::NONE); //Kérünk egy menüelem beállító képernyõ kirajzolást
+			break;
 
-		//Csak egy függvényt kell hívni, az majd elintéz mindent
-	case FUNCT:
-		p.callbackFunct();
-		break;
+			//Csak egy függvényt kell hívni, az majd elintéz mindent
+		case FUNCT:
+			p.callbackFunct();
+			break;
 	}
 }
 
@@ -576,20 +576,36 @@ void menuController(bool rotaryClicked, RotaryEncoderAdapter::Direction rotaryDi
 
 	buzzerMenu();
 	switch (menuState) {
-	case OFF: 	// Nem látszik a fõmenü -> Ha kikkeltek, akkor belépünk a mübe
-		if (rotaryClicked) {
+		case OFF: 	// Nem látszik a fõmenü -> Ha kikkeltek, akkor belépünk a mübe
+			if (rotaryClicked) {
+				menuState = MAIN_MENU;
+				drawMainMenu(); //Kirajzoltatjuk a fõmenüt
+			}
+			break;
+
+		case MAIN_MENU: //Látszik a fõmenü
+			mainMenuController(rotaryClicked, rotaryDirection);
+			break;
+
+		case ITEM_MENU: //Elem változtató menü látszik
+			itemMenuController(rotaryClicked, rotaryDirection);
+			break;
+	}
+}
+
+/**
+ * Menü inaktivitás kezelése
+ */
+void menuInactiveController() {
+	switch (menuState) {
+		case MAIN_MENU:
+			resetMenu(); //Kilépünk a menübõl
+			menuState = OFF;
+			break;
+
+		case ITEM_MENU:
+			drawMainMenu(); //Kilépünk az almenübõl
 			menuState = MAIN_MENU;
-			drawMainMenu(); //Kirajzoltatjuk a fõmenüt
-		}
-		break;
-
-	case MAIN_MENU: //Látszik a fõmenü
-		mainMenuController(rotaryClicked, rotaryDirection);
-		break;
-
-	case ITEM_MENU: //Elem változtató menü látszik
-		itemMenuController(rotaryClicked, rotaryDirection);
-		break;
 	}
 }
 //--- Spot Welding ---------------------------------------------------------------------------------------------------------------------------------------
@@ -688,7 +704,7 @@ void setup() {
 	tempSensors.begin();
 
 	//idõmérés indul
-	lastMiliSecForTempMeasure = millis();
+	lastMiliSec = millis();
 }
 
 /**
@@ -725,6 +741,14 @@ void loop() {
 	//Ha klikkeltek VAGY van irány, akkor a menüt piszkáljuk
 	if (rotaryEncoderResult.clicked || rotaryEncoderResult.direction != RotaryEncoderAdapter::Direction::NONE) {
 		menuController(rotaryEncoderResult.clicked, rotaryEncoderResult.direction);
+		//menütétlenség 'reset'
+		lastMiliSec = millis();
+	}
+
+	//Menü tétlenség figyelése
+	if (menuState != OFF && ((millis() - lastMiliSec) > MENU_INACTIVE_IN_MSEC)) {
+		menuInactiveController();
+		lastMiliSec = millis();
 	}
 
 	//Ha már nem vagyunk a menüben, és kell menteni valamit a konfigban, akkor azt most tesszük meg
