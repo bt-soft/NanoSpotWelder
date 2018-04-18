@@ -17,7 +17,7 @@ Config config;
 #define DALLAS18B20_PIN			A2
 #define MOT_TEMP_SENSOR_NDX 	0
 #define TEMP_DIFF_TO_DISPLAY  	0.5f	/* fél fokonkénti eltérésekkel foglalkozunk csak */
-float lastMotTemp = -1.0f;	//A MOT utolsó mért hõmérséklete
+float lastMotTemp = -1.0f;				//A MOT utolsó mért hõmérséklete
 OneWire oneWire(DALLAS18B20_PIN);
 DallasTemperature tempSensors(&oneWire);
 
@@ -70,21 +70,21 @@ Nokia5110Display nokia5110Display = Nokia5110Display(8, 7, 6, 5, 4); //Software 
 #define LCD_BLACKLIGHT_PIN 		9
 
 // -- Runtime adatok
-long lastMiliSec = -1;				// hõmérséklet mmérésre, menü tétlenségi idõ detektálása*/
+long lastMiliSec = -1;					// hõmérséklet mmérésre, menü tétlenségi idõ detektálása*/
 char tempBuff[64];
-#define DEGREE_SYMBOL_CODE 247		/* Az LCD-n a '°' jel kódja */
+#define DEGREE_SYMBOL_CODE 		247		/* Az LCD-n a '°' jel kódja */
 
 //------------------- Spot welding paraméterek
-#define ZCD_PIN 			2		/* Zero Cross Detection PIN, megszakításban */
-#define TRIAC_PIN 			12 		/* D12 Triac/MOC vezérlés PIN */
-#define WELD_LED_PIN 		11		/* D11 Hegesztés LED visszajelzés */
-#define WELD_BUTTON_PIN 	10 		/* D10 Hegesztés gomb */
+#define ZCD_PIN 				2		/* Zero Cross Detection PIN, megszakításban */
+#define TRIAC_PIN 				12 		/* D12 Triac/MOC vezérlés PIN */
+#define WELD_LED_PIN 			11		/* D11 Hegesztés LED visszajelzés */
+#define WELD_BUTTON_PIN 		10 		/* D10 Hegesztés gomb */
 
 //Periódus Számláló, hegesztés alatt megszakításkor inkrementálódik
 volatile uint16_t weldPeriodCnt = 0;
 
 //Mért hálózati frekvencia
-float spotWelderSystemFrequency;
+float spotWelderSystemPeriodTime = 0.0;
 
 //------------------- Beeper
 #define BUZZER_PIN 				13
@@ -158,6 +158,21 @@ void drawSplashScreen(void) {
 }
 
 /**
+ * Hõmérséklet kiírása a main- és az alarm screen-nél
+ */
+void drawTempValue(float currentMotTemp) {
+	nokia5110Display.setTextSize(2);
+	nokia5110Display.setCursor(18, 32);
+	dtostrf(currentMotTemp, 1, 1, tempBuff);
+	nokia5110Display.print(tempBuff);
+
+	nokia5110Display.setTextSize(1);
+	nokia5110Display.setCursor(68, 38);
+	sprintf(tempBuff, "%cC", DEGREE_SYMBOL_CODE);
+	nokia5110Display.print(tempBuff);
+}
+
+/**
  * Main screen
  */
 void drawMainDisplay(float currentMotTemp) {
@@ -170,17 +185,9 @@ void drawMainDisplay(float currentMotTemp) {
 	sprintf(tempBuff, "%-3d   %-3d  %-3d", config.configVars.preWeldPulseCnt, config.configVars.pausePulseCnt, config.configVars.weldPulseCnt);
 	nokia5110Display.println(tempBuff);
 
+	//Hõmérséklet kiírása
 	nokia5110Display.print("\nMOT Temp");
-
-	nokia5110Display.setTextSize(2);
-	nokia5110Display.setCursor(18, 32);
-	dtostrf(currentMotTemp, 1, 1, tempBuff);
-	nokia5110Display.print(tempBuff);
-
-	nokia5110Display.setTextSize(1);
-	nokia5110Display.setCursor(68, 38);
-	sprintf(tempBuff, "%cC", DEGREE_SYMBOL_CODE);
-	nokia5110Display.print(tempBuff);
+	drawTempValue(currentMotTemp);
 
 	nokia5110Display.display();
 }
@@ -198,15 +205,8 @@ void drawWarningDisplay(float currentMotTemp) {
 	nokia5110Display.println("  too high!");
 	nokia5110Display.println("!!!!!!!!!!!!!!");
 
-	nokia5110Display.setTextSize(2);
-	nokia5110Display.setCursor(18, 32);
-	dtostrf(currentMotTemp, 1, 1, tempBuff);
-	nokia5110Display.print(tempBuff);
-
-	nokia5110Display.setTextSize(1);
-	nokia5110Display.setCursor(68, 38);
-	sprintf(tempBuff, "%cC", DEGREE_SYMBOL_CODE);
-	nokia5110Display.print(tempBuff);
+	//Hõmérséklet kiírása
+	drawTempValue(currentMotTemp);
 
 	nokia5110Display.display();
 }
@@ -266,7 +266,7 @@ MenuViewPortT menuViewport;
 
 /* változtatható érték típusa */
 typedef enum valueType_t {
-	BOOL, BYTE, FUNCT
+	BOOL, BYTE, PULSE, TEMP, FUNCT
 };
 
 typedef void (*voidFuncPtr)(void);
@@ -332,12 +332,13 @@ void menuFactoryReset(void) {
 	menuBeepState();
 
 	//menü alapállapotba
-	menuState = OFF;
 	resetMenu();
+	menuState = OFF;
 }
 void menuExit(void) {
-	menuState = OFF; //Kilépünk a menübõl
+	//menü alapállapotba
 	resetMenu();
+	menuState = OFF; //Kilépünk a menübõl
 }
 
 /**
@@ -345,10 +346,10 @@ void menuExit(void) {
  */
 void initMenuItems(void) {
 
-	menuItems[0] = {"PreWeld pulse", BYTE, &config.configVars.preWeldPulseCnt, 0, 255, NULL};
-	menuItems[1] = {"Pause pulse", BYTE, &config.configVars.pausePulseCnt, 0, 255, NULL};
-	menuItems[2] = {"Weld pulse", BYTE, &config.configVars.weldPulseCnt, 1, 255, NULL};
-	menuItems[3] = {"MOT T.Alrm", BYTE, &config.configVars.motTempAlarm, 30, 120, NULL};
+	menuItems[0] = {"PreWeld pulse", PULSE, &config.configVars.preWeldPulseCnt, 0, 255, NULL};
+	menuItems[1] = {"Pause pulse", PULSE, &config.configVars.pausePulseCnt, 0, 255, NULL};
+	menuItems[2] = {"Weld pulse", PULSE, &config.configVars.weldPulseCnt, 1, 255, NULL};
+	menuItems[3] = {"MOT T.Alrm", TEMP, &config.configVars.motTempAlarm, 30, 120, NULL};
 	menuItems[4] = {"Contrast", BYTE, &config.configVars.contrast, 0, 255, menuLcdContrast};
 	menuItems[5] = {"Disp light", BOOL, &config.configVars.blackLightState, 0, 1, menuLcdBackLight};
 	menuItems[6] = {"Beep", BOOL, &config.configVars.beepState, 0, 1, menuBeepState};
@@ -393,23 +394,42 @@ void drawMainMenu(void) {
 }
 
 /**
+ * Msec -> String konverzió
+ */
+String time2Str(long x) {
+#define SEC_IN_MSEC 1000
+#define MIN_IN_MSEC (60 * SEC_IN_MSEC)
+
+	String result = "";
+	int min = x / MIN_IN_MSEC;
+	if (min > 0) {
+		result += min;
+		result += "m";
+	}
+	x %= MIN_IN_MSEC;
+
+	int sec = x / SEC_IN_MSEC;
+	if (sec > 0) {
+		result += " ";
+		result += sec + "s";
+	}
+	x %= SEC_IN_MSEC;
+
+	if (x > 0) {
+		result += " ";
+		result + x;
+		result += "ms";
+	}
+
+	return result;
+}
+
+/**
  * menüelem beállítõ képernyõ
  */
 void drawMenuItemValue() {
 
 	MenuItemT p = menuItems[menuViewport.selectedItem];
-	String dspValue = "unknown";
-
-	//Típus szerinti kiírás
-	switch (p.valueType) {
-		case BOOL:
-			dspValue = *(bool *) p.valuePtr ? "ON" : "OFF";
-			break;
-
-		case BYTE:
-			dspValue = String(*(byte *) p.valuePtr);
-			break;
-	}
 
 	nokia5110Display.clearDisplay();
 
@@ -420,11 +440,60 @@ void drawMenuItemValue() {
 	nokia5110Display.drawFastHLine(0, 10, 83, BLACK);
 
 	nokia5110Display.setCursor(5, 15);
-	nokia5110Display.print("Value");
+	switch (p.valueType) {
+		case TEMP:
+		case BYTE:
+		case BOOL:
+			nokia5110Display.print("Value");
+			break;
+
+		case PULSE:
+			nokia5110Display.print("Pulse");
+			break;
+	}
 
 	nokia5110Display.setTextSize(2);
 	nokia5110Display.setCursor(5, 25);
+
+	//Típus szerinti kiírás
+	String dspValue = "unknown";
+	switch (p.valueType) {
+		case BOOL:
+			dspValue = *(bool *) p.valuePtr ? "ON" : "OFF";
+			break;
+
+		case PULSE:
+		case TEMP:
+		case BYTE:
+			dspValue = String(*(byte *) p.valuePtr);
+			break;
+	}
 	nokia5110Display.print(dspValue);
+
+	nokia5110Display.setTextSize(1);
+	switch (p.valueType) {
+		case BYTE:
+		case BOOL:
+			break;
+
+		case TEMP:
+			nokia5110Display.setCursor(55, 30);
+			sprintf(tempBuff, "%cC", DEGREE_SYMBOL_CODE);
+			nokia5110Display.print(tempBuff);
+			break;
+
+		case PULSE:
+			if (spotWelderSystemPeriodTime > 0.0) {
+				//nokia5110Display.setCursor(55, 30);
+
+				nokia5110Display.setCursor(20, 40);
+				byte value = *(byte *) p.valuePtr;
+				long pulseLenght = spotWelderSystemPeriodTime * 1000.0 * value;
+				nokia5110Display.print(time2Str(pulseLenght));
+			}
+			break;
+	}
+
 	nokia5110Display.display();
 }
 
@@ -447,26 +516,37 @@ void itemMenuController(bool rotaryClicked, RotaryEncoderAdapter::Direction rota
 
 			case RotaryEncoderAdapter::Direction::UP:
 
-				if (p.valueType == BYTE) {
-					if (*(byte *) p.valuePtr < p.maxValue) {
-						(*(byte *) p.valuePtr)++;
-					}
-				} else if (p.valueType == BOOL) {
-					if (!*(bool *) p.valuePtr) { //ha most false, akkor true-t csinálunk belõle
-						*(bool *) p.valuePtr = true;
-					}
+				switch (p.valueType) {
+					case BYTE:
+					case PULSE:
+					case TEMP:
+						if (*(byte *) p.valuePtr < p.maxValue) {
+							(*(byte *) p.valuePtr)++;
+						}
+						break;
+
+					case BOOL:
+						if (!*(bool *) p.valuePtr) { //ha most false, akkor true-t csinálunk belõle
+							*(bool *) p.valuePtr = true;
+						}
+						break;
 				}
 				break;
 
 			case RotaryEncoderAdapter::Direction::DOWN:
-				if (p.valueType == BYTE) {
-					if (*(byte *) p.valuePtr > p.minValue) {
-						(*(byte *) p.valuePtr)--;
-					}
-				} else if (p.valueType == BOOL) {
-					if (*(bool *) p.valuePtr) { //ha most true, akkor false-t csinálunk belõle
-						*(bool *) p.valuePtr = false;
-					}
+				switch (p.valueType) {
+					case BYTE:
+					case PULSE:
+					case TEMP:
+						if (*(byte *) p.valuePtr > p.minValue) {
+							(*(byte *) p.valuePtr)--;
+						}
+						break;
+					case BOOL:
+						if (*(bool *) p.valuePtr) { //ha most true, akkor false-t csinálunk belõle
+							*(bool *) p.valuePtr = false;
+						}
+						break;
 				}
 				break;
 
@@ -561,6 +641,8 @@ void mainMenuController(bool rotaryClicked, RotaryEncoderAdapter::Direction rota
 		//Ha ez egy értékbeállító almenü
 		case BOOL:
 		case BYTE:
+		case PULSE:
+		case TEMP:
 			menuState = ITEM_MENU;
 			itemMenuController(false, RotaryEncoderAdapter::Direction::NONE); //Kérünk egy menüelem beállító képernyõ kirajzolást
 			break;
@@ -624,8 +706,9 @@ void zeroCrossDetect(void) {
  */
 void weldButtonPushed(void) {
 	weldPeriodCnt = 0;
-	sei();
+
 	//interrupt on
+	sei();
 
 	//LED-be
 	digitalWrite(WELD_LED_PIN, HIGH);
@@ -659,8 +742,9 @@ void weldButtonPushed(void) {
 
 	//LED ki
 	digitalWrite(WELD_LED_PIN, LOW);
-	cli();
+
 	//interrupt tiltása
+	cli();
 }
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -672,7 +756,7 @@ void setup() {
 #ifdef SERIAL_DEBUG
 	Serial.begin(9600);
 	while (!Serial)
-		;
+	;
 	Serial.println("Debug active");
 #endif
 
@@ -711,44 +795,18 @@ void setup() {
 
 	//idõmérés indul
 	lastMiliSec = millis();
-}
 
+	//kiszámítjuk a periódus idõt
+	spotWelderSystemPeriodTime = 1 / (float) SYSTEM_FREQUENCY;
+
+}
 
 /**
  * Main loop
  */
 void loop() {
 
-	static bool firstTime = true;
-
-	/**
-	 * Elsõ futáskor megmérjük a hálózat frekvenciáját
-	 */
-#define FREQ_MEAS_SEC 2 /* frekvencia mérés idõtartama */
-	if (firstTime) {
-		weldPeriodCnt = 0;
-
-		//interrupt ON
-		sei();
-		delay(FREQ_MEAS_SEC * 1000);
-		//interrupt OFF
-		cli();
-
-		spotWelderSystemFrequency = (float) weldPeriodCnt / FREQ_MEAS_SEC ;
-
-#ifdef SERIAL_DEBUG
-		Serial.print("weldPeriodCnt: ");
-		Serial.print(weldPeriodCnt);
-		Serial.print(" /");
-		Serial.print(FREQ_MEAS_SEC);
-		Serial.println(" sec");
-
-		Serial.print("Freq: ");
-		Serial.print(spotWelderSystemFrequency);
-		Serial.print("Hz");
-#endif
-	}
-
+	static bool firstTime = true;	//elsõ futás jelzése
 	static byte weldButtonPrevState = LOW;   //A hegesztés gomb elõzõ állapota
 
 	//--- Hegesztés kezelése -------------------------------------------------------------------

@@ -19,4 +19,6 @@
 
 #define DEF_MOT_TEMP_ALARM 		90 		/* MOT hõmérséklet riasztás */
 
+#define SYSTEM_FREQUENCY		50.0	/* Hz-ben */
+
 #endif /* NANOSPOTWELDERDEFAULTS_H_ */
