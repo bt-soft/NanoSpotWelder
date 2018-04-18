@@ -124,6 +124,10 @@ void buzzerAlarm(void) {
  * menu hang
  */
 void buzzerMenu() {
+	if (!config.configVars.beepState) {
+		return;
+	}
+
 	tone(BUZZER_PIN, 800);
 	delay(10);
 	noTone(BUZZER_PIN);
@@ -257,9 +261,9 @@ MenuState_t menuState = OFF;
 
 const byte MENU_VIEVPORT_LINEPOS[] = { 15, 25, 35 };
 typedef struct MenuViewport_t {
-		byte firstItem;
-		byte lastItem;
-		byte selectedItem;
+	byte firstItem;
+	byte lastItem;
+	byte selectedItem;
 } MenuViewPortT;
 MenuViewPortT menuViewport;
 #define MENU_VIEWPORT_SIZE 	3	/* Menü elemekbõl ennyi látszik */
@@ -271,12 +275,12 @@ typedef enum valueType_t {
 
 typedef void (*voidFuncPtr)(void);
 typedef struct MenuItem_t {
-		String title;					// Menüfelirat
-		valueType_t valueType;			// Érték típus
-		void *valuePtr;					// Az érték pointere
-		byte minValue;					// Minimális numerikus érték
-		byte maxValue;					// Maximális numerikus érték
-		voidFuncPtr callbackFunct; 		// Egyéb mûveletek függvény pointere, vagy NULL, ha nincs
+	String title;					// Menüfelirat
+	valueType_t valueType;			// Érték típus
+	void *valuePtr;					// Az érték pointere
+	byte minValue;					// Minimális numerikus érték
+	byte maxValue;					// Maximális numerikus érték
+	voidFuncPtr callbackFunct; 		// Egyéb mûveletek függvény pointere, vagy NULL, ha nincs
 } MenuItemT;
 #define LAST_MENUITEM_NDX 	8 /* Az utolsó menüelem indexe, 0-tól indul */
 MenuItemT menuItems[LAST_MENUITEM_NDX + 1];
@@ -318,7 +322,7 @@ void menuFactoryReset(void) {
 	nokia5110Display.drawFastHLine(0, 10, 83, BLACK);
 	nokia5110Display.setTextSize(2);
 	nokia5110Display.setCursor(5, 25);
-	nokia5110Display.print("OK");
+	nokia5110Display.print("Ok...");
 
 	nokia5110Display.display();
 
@@ -392,38 +396,6 @@ void drawMainMenu(void) {
 	}
 	nokia5110Display.display();
 }
-
-/**
- * Msec -> String konverzió
- */
-String time2Str(long x) {
-#define SEC_IN_MSEC 1000
-#define MIN_IN_MSEC (60 * SEC_IN_MSEC)
-
-	String result = "";
-	int min = x / MIN_IN_MSEC;
-	if (min > 0) {
-		result += min;
-		result += "m";
-	}
-	x %= MIN_IN_MSEC;
-
-	int sec = x / SEC_IN_MSEC;
-	if (sec > 0) {
-		result += " ";
-		result += sec + "s";
-	}
-	x %= SEC_IN_MSEC;
-
-	if (x > 0) {
-		result += " ";
-		result + x;
-		result += "ms";
-	}
-
-	return result;
-}
-
 /**
  * menüelem beállítõ képernyõ
  */
@@ -441,15 +413,15 @@ void drawMenuItemValue() {
 
 	nokia5110Display.setCursor(5, 15);
 	switch (p.valueType) {
-		case TEMP:
-		case BYTE:
-		case BOOL:
-			nokia5110Display.print("Value");
-			break;
+	case TEMP:
+	case BYTE:
+	case BOOL:
+		nokia5110Display.print("Value");
+		break;
 
-		case PULSE:
-			nokia5110Display.print("Pulse");
-			break;
+	case PULSE:
+		nokia5110Display.print("Pulse");
+		break;
 	}
 
 	nokia5110Display.setTextSize(2);
@@ -458,40 +430,41 @@ void drawMenuItemValue() {
 	//Típus szerinti kiírás
 	String dspValue = "unknown";
 	switch (p.valueType) {
-		case BOOL:
-			dspValue = *(bool *) p.valuePtr ? "ON" : "OFF";
-			break;
+	case BOOL:
+		dspValue = *(bool *) p.valuePtr ? "ON" : "OFF";
+		break;
 
-		case PULSE:
-		case TEMP:
-		case BYTE:
-			dspValue = String(*(byte *) p.valuePtr);
-			break;
+	case PULSE:
+	case TEMP:
+	case BYTE:
+		dspValue = String(*(byte *) p.valuePtr);
+		break;
 	}
 	nokia5110Display.print(dspValue);
 
 	nokia5110Display.setTextSize(1);
 	switch (p.valueType) {
-		case BYTE:
-		case BOOL:
-			break;
+	case BYTE:
+	case BOOL:
+		break;
 
-		case TEMP:
-			nokia5110Display.setCursor(55, 30);
-			sprintf(tempBuff, "%cC", DEGREE_SYMBOL_CODE);
+	case TEMP:
+		nokia5110Display.setCursor(55, 30);
+		sprintf(tempBuff, "%cC", DEGREE_SYMBOL_CODE);
+		nokia5110Display.print(tempBuff);
+		break;
+
+	case PULSE:
+		if (spotWelderSystemPeriodTime > 0.0) {
+			//nokia5110Display.setCursor(55, 30);
+
+			nokia5110Display.setCursor(20, 40);
+			byte value = *(byte *) p.valuePtr;
+			long pulseLenght = spotWelderSystemPeriodTime * 1000.0 * value;
+			sprintf(tempBuff, "%d msec", pulseLenght);
 			nokia5110Display.print(tempBuff);
-			break;
-
-		case PULSE:
-			if (spotWelderSystemPeriodTime > 0.0) {
-				//nokia5110Display.setCursor(55, 30);
-
-				nokia5110Display.setCursor(20, 40);
-				byte value = *(byte *) p.valuePtr;
-				long pulseLenght = spotWelderSystemPeriodTime * 1000.0 * value;
-				nokia5110Display.print(time2Str(pulseLenght));
-			}
-			break;
+		}
+		break;
 	}
 
 	nokia5110Display.display();
@@ -514,45 +487,45 @@ void itemMenuController(bool rotaryClicked, RotaryEncoderAdapter::Direction rota
 
 		switch (rotaryDirection) {
 
-			case RotaryEncoderAdapter::Direction::UP:
+		case RotaryEncoderAdapter::Direction::UP:
 
-				switch (p.valueType) {
-					case BYTE:
-					case PULSE:
-					case TEMP:
-						if (*(byte *) p.valuePtr < p.maxValue) {
-							(*(byte *) p.valuePtr)++;
-						}
-						break;
-
-					case BOOL:
-						if (!*(bool *) p.valuePtr) { //ha most false, akkor true-t csinálunk belõle
-							*(bool *) p.valuePtr = true;
-						}
-						break;
+			switch (p.valueType) {
+			case BYTE:
+			case PULSE:
+			case TEMP:
+				if (*(byte *) p.valuePtr < p.maxValue) {
+					(*(byte *) p.valuePtr)++;
 				}
 				break;
 
-			case RotaryEncoderAdapter::Direction::DOWN:
-				switch (p.valueType) {
-					case BYTE:
-					case PULSE:
-					case TEMP:
-						if (*(byte *) p.valuePtr > p.minValue) {
-							(*(byte *) p.valuePtr)--;
-						}
-						break;
-					case BOOL:
-						if (*(bool *) p.valuePtr) { //ha most true, akkor false-t csinálunk belõle
-							*(bool *) p.valuePtr = false;
-						}
-						break;
+			case BOOL:
+				if (!*(bool *) p.valuePtr) { //ha most false, akkor true-t csinálunk belõle
+					*(bool *) p.valuePtr = true;
 				}
 				break;
+			}
+			break;
 
-			case RotaryEncoderAdapter::Direction::NONE:
-				//Csak kirajzoltatást kértek
+		case RotaryEncoderAdapter::Direction::DOWN:
+			switch (p.valueType) {
+			case BYTE:
+			case PULSE:
+			case TEMP:
+				if (*(byte *) p.valuePtr > p.minValue) {
+					(*(byte *) p.valuePtr)--;
+				}
 				break;
+			case BOOL:
+				if (*(bool *) p.valuePtr) { //ha most true, akkor false-t csinálunk belõle
+					*(bool *) p.valuePtr = false;
+				}
+				break;
+			}
+			break;
+
+		case RotaryEncoderAdapter::Direction::NONE:
+			//Csak kirajzoltatást kértek
+			break;
 		}
 
 		//Menuelem beálító képernyõ kirajzoltatása
@@ -585,42 +558,42 @@ void mainMenuController(bool rotaryClicked, RotaryEncoderAdapter::Direction rota
 	if (!rotaryClicked) {
 
 		switch (rotaryDirection) {
-			case RotaryEncoderAdapter::Direction::UP:
+		case RotaryEncoderAdapter::Direction::UP:
 
-				//Az utolsó elem a kiválasztott? Ha igen, akkor nem megyünk tovább
-				if (menuViewport.selectedItem == LAST_MENUITEM_NDX) {
-					return;
-				}
-
-				//A következõ menüelem lesz a kiválasztott
-				menuViewport.selectedItem++;
-
-				//A viewport aljánál túljutottunk? Ha igen, akkor scrollozunk egyet lefelé
-				if (menuViewport.selectedItem > menuViewport.lastItem) {
-					menuViewport.firstItem++;
-					menuViewport.lastItem++;
-				}
-				break;
-
-			case RotaryEncoderAdapter::Direction::DOWN:
-
-				//Az elsõ elem a kiválasztott? Ha igen, akkor nem megyünk tovább
-				if (menuViewport.selectedItem == 0) {
-					return;
-				}
-
-				//Az elõzõ menüelem lesz a kiválasztott
-				menuViewport.selectedItem--;
-
-				//A viewport aljánál túljutottunk? Ha igen, akkor scrollozunk egyet lefelé
-				if (menuViewport.selectedItem < menuViewport.firstItem) {
-					menuViewport.firstItem--;
-					menuViewport.lastItem--;
-				}
-				break;
-
-			default:
+			//Az utolsó elem a kiválasztott? Ha igen, akkor nem megyünk tovább
+			if (menuViewport.selectedItem == LAST_MENUITEM_NDX) {
 				return;
+			}
+
+			//A következõ menüelem lesz a kiválasztott
+			menuViewport.selectedItem++;
+
+			//A viewport aljánál túljutottunk? Ha igen, akkor scrollozunk egyet lefelé
+			if (menuViewport.selectedItem > menuViewport.lastItem) {
+				menuViewport.firstItem++;
+				menuViewport.lastItem++;
+			}
+			break;
+
+		case RotaryEncoderAdapter::Direction::DOWN:
+
+			//Az elsõ elem a kiválasztott? Ha igen, akkor nem megyünk tovább
+			if (menuViewport.selectedItem == 0) {
+				return;
+			}
+
+			//Az elõzõ menüelem lesz a kiválasztott
+			menuViewport.selectedItem--;
+
+			//A viewport aljánál túljutottunk? Ha igen, akkor scrollozunk egyet lefelé
+			if (menuViewport.selectedItem < menuViewport.firstItem) {
+				menuViewport.firstItem--;
+				menuViewport.lastItem--;
+			}
+			break;
+
+		default:
+			return;
 		}
 
 		drawMainMenu();
@@ -638,19 +611,19 @@ void mainMenuController(bool rotaryClicked, RotaryEncoderAdapter::Direction rota
 
 	//Típus szerint megyünk tovább
 	switch (p.valueType) {
-		//Ha ez egy értékbeállító almenü
-		case BOOL:
-		case BYTE:
-		case PULSE:
-		case TEMP:
-			menuState = ITEM_MENU;
-			itemMenuController(false, RotaryEncoderAdapter::Direction::NONE); //Kérünk egy menüelem beállító képernyõ kirajzolást
-			break;
+	//Ha ez egy értékbeállító almenü
+	case BOOL:
+	case BYTE:
+	case PULSE:
+	case TEMP:
+		menuState = ITEM_MENU;
+		itemMenuController(false, RotaryEncoderAdapter::Direction::NONE); //Kérünk egy menüelem beállító képernyõ kirajzolást
+		break;
 
-			//Csak egy függvényt kell hívni, az majd elintéz mindent
-		case FUNCT:
-			p.callbackFunct();
-			break;
+		//Csak egy függvényt kell hívni, az majd elintéz mindent
+	case FUNCT:
+		p.callbackFunct();
+		break;
 	}
 }
 
@@ -661,20 +634,20 @@ void menuController(bool rotaryClicked, RotaryEncoderAdapter::Direction rotaryDi
 
 	buzzerMenu();
 	switch (menuState) {
-		case OFF: 	// Nem látszik a fõmenü -> Ha kikkeltek, akkor belépünk a mübe
-			if (rotaryClicked) {
-				menuState = MAIN_MENU;
-				drawMainMenu(); //Kirajzoltatjuk a fõmenüt
-			}
-			break;
+	case OFF: 	// Nem látszik a fõmenü -> Ha kikkeltek, akkor belépünk a mübe
+		if (rotaryClicked) {
+			menuState = MAIN_MENU;
+			drawMainMenu(); //Kirajzoltatjuk a fõmenüt
+		}
+		break;
 
-		case MAIN_MENU: //Látszik a fõmenü
-			mainMenuController(rotaryClicked, rotaryDirection);
-			break;
+	case MAIN_MENU: //Látszik a fõmenü
+		mainMenuController(rotaryClicked, rotaryDirection);
+		break;
 
-		case ITEM_MENU: //Elem változtató menü látszik
-			itemMenuController(rotaryClicked, rotaryDirection);
-			break;
+	case ITEM_MENU: //Elem változtató menü látszik
+		itemMenuController(rotaryClicked, rotaryDirection);
+		break;
 	}
 }
 
@@ -683,14 +656,14 @@ void menuController(bool rotaryClicked, RotaryEncoderAdapter::Direction rotaryDi
  */
 void menuInactiveController() {
 	switch (menuState) {
-		case MAIN_MENU:
-			resetMenu(); //Kilépünk a menübõl
-			menuState = OFF;
-			break;
+	case MAIN_MENU:
+		resetMenu(); //Kilépünk a menübõl
+		menuState = OFF;
+		break;
 
-		case ITEM_MENU:
-			drawMainMenu(); //Kilépünk az almenübõl
-			menuState = MAIN_MENU;
+	case ITEM_MENU:
+		drawMainMenu(); //Kilépünk az almenübõl
+		menuState = MAIN_MENU;
 	}
 }
 //--- Spot Welding ---------------------------------------------------------------------------------------------------------------------------------------
