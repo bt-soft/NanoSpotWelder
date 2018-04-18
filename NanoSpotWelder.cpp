@@ -7,6 +7,9 @@
 #include "Nokia5110Display.h"
 #include "RotaryEncoderAdapter.h"
 
+//Serial konzol debug ON
+//#define SERIAL_DEBUG
+
 //------------------- Konfig support
 Config config;
 
@@ -78,10 +81,10 @@ char tempBuff[64];
 #define WELD_BUTTON_PIN 	10 		/* D10 Hegesztés gomb */
 
 //Periódus Számláló, hegesztés alatt megszakításkor inkrementálódik
-volatile int8_t weldPeriodCnt = 0;
+volatile uint16_t weldPeriodCnt = 0;
 
-//Hegesztésben vagyunk?
-volatile boolean isWelding = false;
+//Mért hálózati frekvencia
+float spotWelderSystemFrequency;
 
 //------------------- Beeper
 #define BUZZER_PIN 				13
@@ -613,10 +616,7 @@ void menuInactiveController() {
  * ZCD interrupt
  */
 void zeroCrossDetect(void) {
-
-	if (isWelding) {
-		weldPeriodCnt++;
-	}
+	weldPeriodCnt++;
 }
 
 /**
@@ -624,7 +624,8 @@ void zeroCrossDetect(void) {
  */
 void weldButtonPushed(void) {
 	weldPeriodCnt = 0;
-	isWelding = true;
+	sei();
+	//interrupt on
 
 	//LED-be
 	digitalWrite(WELD_LED_PIN, HIGH);
@@ -658,7 +659,8 @@ void weldButtonPushed(void) {
 
 	//LED ki
 	digitalWrite(WELD_LED_PIN, LOW);
-	isWelding = false;
+	cli();
+	//interrupt tiltása
 }
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -667,8 +669,12 @@ void weldButtonPushed(void) {
  * Boot beállítások
  */
 void setup() {
-	//Serial.begin(9600);
-	//while (!Serial);
+#ifdef SERIAL_DEBUG
+	Serial.begin(9600);
+	while (!Serial)
+		;
+	Serial.println("Debug active");
+#endif
 
 	//Konfig felolvasása
 	config.read();
@@ -707,18 +713,48 @@ void setup() {
 	lastMiliSec = millis();
 }
 
+
 /**
  * Main loop
  */
 void loop() {
 
-	static bool firstTime = true;   // Force an initial display of rotary values
-	static byte weldButtonPrevState = LOW; 	//A hegesztés gomb elõzõ állapota
+	static bool firstTime = true;
+
+	/**
+	 * Elsõ futáskor megmérjük a hálózat frekvenciáját
+	 */
+#define FREQ_MEAS_SEC 2 /* frekvencia mérés idõtartama */
+	if (firstTime) {
+		weldPeriodCnt = 0;
+
+		//interrupt ON
+		sei();
+		delay(FREQ_MEAS_SEC * 1000);
+		//interrupt OFF
+		cli();
+
+		spotWelderSystemFrequency = (float) weldPeriodCnt / FREQ_MEAS_SEC ;
+
+#ifdef SERIAL_DEBUG
+		Serial.print("weldPeriodCnt: ");
+		Serial.print(weldPeriodCnt);
+		Serial.print(" /");
+		Serial.print(FREQ_MEAS_SEC);
+		Serial.println(" sec");
+
+		Serial.print("Freq: ");
+		Serial.print(spotWelderSystemFrequency);
+		Serial.print("Hz");
+#endif
+	}
+
+	static byte weldButtonPrevState = LOW;   //A hegesztés gomb elõzõ állapota
 
 	//--- Hegesztés kezelése -------------------------------------------------------------------
 	//Kiolvassuk a weld button állapotát
 	byte weldButtonCurrentState = digitalRead(WELD_BUTTON_PIN);
-	if (weldButtonCurrentState == HIGH && weldButtonPrevState == LOW && !isWelding) {
+	if (weldButtonCurrentState != weldButtonPrevState && weldButtonCurrentState == HIGH && weldButtonPrevState == LOW) {
 		weldButtonPushed();
 		menuState = OFF; //kilépünk a menübõl, ha épp benne voltunk
 	}
@@ -734,7 +770,7 @@ void loop() {
 	if (firstTime) {
 		firstTime = false;
 		rotaryEncoder.SetChanged();   // force an update on active rotary
-		rotaryEncoder.readRotaryEncoder(); //elsõ kiolvasást eldobjuk
+		rotaryEncoder.readRotaryEncoder();   //elsõ kiolvasást eldobjuk
 	}
 
 	RotaryEncoderAdapter::RotaryEncoderResult rotaryEncoderResult = rotaryEncoder.readRotaryEncoder();
