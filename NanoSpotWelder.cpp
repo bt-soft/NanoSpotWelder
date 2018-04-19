@@ -10,6 +10,9 @@
 //Serial konzol debug ON
 //#define SERIAL_DEBUG
 
+// A hálózat frekvenciája Hz-ben
+#define SYSTEM_FREQUENCY		50.0	/* Hz-ben */
+
 //------------------- Konfig support
 Config config;
 
@@ -393,6 +396,29 @@ void drawMainMenu(void) {
 	}
 	nokia5110Display.display();
 }
+
+/**
+ * msec -> String konverter
+ */
+String msecToStr(long x) {
+
+	byte sec = x / 1000;
+	byte msec = x % (sec * 1000);
+	String res = "";
+
+	if (sec > 0) {
+		res += sec;
+		res += "s ";
+
+	}
+	if (msec > 0) {
+		res += msec;
+		res += "ms";
+	}
+
+	return res;
+}
+
 /**
  * menüelem beállítõ képernyõ
  */
@@ -453,13 +479,8 @@ void drawMenuItemValue() {
 
 		case PULSE:
 			if (spotWelderSystemPeriodTime > 0.0) {
-				//nokia5110Display.setCursor(55, 30);
-
-				nokia5110Display.setCursor(20, 40);
-				byte value = *(byte *) p.valuePtr;
-				long pulseLenght = spotWelderSystemPeriodTime * 1000.0 * value;
-				sprintf(tempBuff, "%d msec", pulseLenght);
-				nokia5110Display.print(tempBuff);
+				nokia5110Display.setCursor(35, 40);
+				nokia5110Display.print(msecToStr(spotWelderSystemPeriodTime * 1000.0 * *(byte *) p.valuePtr));
 			}
 			break;
 	}
@@ -683,9 +704,9 @@ void zeroCrossDetect(void) {
 
 	switch (weldCurrentState) {
 
-		case WELD_START:	//ez csak azért kell, hogy szinkronba kerüljünk a hálózattal
-			weldCurrentState = PRE_WELD;
-			return;
+//		case WELD_START:	//ez csak azért kell, hogy szinkronba kerüljünk a hálózattal
+//			weldCurrentState = PRE_WELD;
+//			return;
 
 		case PRE_WELD: //A pre-ben vagyunk
 			//A Triakot csak akkor kapcsoljuk be, ha van elõinpulzus szám a konfigban, és nincs még bekapcsolva
@@ -694,7 +715,6 @@ void zeroCrossDetect(void) {
 				digitalWrite(TRIAC_PIN, HIGH); //TRIAC BE
 				return;
 			}
-
 
 			if (++weldPeriodCnt >= config.configVars.preWeldPulseCnt) {
 				digitalWrite(TRIAC_PIN, LOW); //TRIAC KI
@@ -712,7 +732,7 @@ void zeroCrossDetect(void) {
 
 		case WELD:
 			//bekapcsoljuk a triakot, ha még nincs bekapcsolva
-			if(digitalRead(TRIAC_PIN) == LOW){
+			if (digitalRead(TRIAC_PIN) == LOW) {
 				weldPeriodCnt = 0;
 				digitalWrite(TRIAC_PIN, HIGH); //TRIAC BE
 				return;
@@ -742,7 +762,7 @@ void weldButtonPushed(void) {
 	digitalWrite(WELD_LED_PIN, HIGH);
 
 	//interrupt ON
-	weldCurrentState = WELD_START;
+	weldCurrentState = PRE_WELD;
 	sei();
 	//Megvárjuk a hegesztési folyamat végét
 	while (weldCurrentState != WELD_END) {
