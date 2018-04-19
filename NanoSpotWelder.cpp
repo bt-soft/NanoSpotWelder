@@ -80,9 +80,6 @@ char tempBuff[64];
 #define WELD_LED_PIN 			11		/* D11 Hegesztés LED visszajelzés */
 #define WELD_BUTTON_PIN 		10 		/* D10 Hegesztés gomb */
 
-//Periódus Számláló, hegesztés alatt megszakításkor inkrementálódik
-volatile uint16_t weldPeriodCnt = 0;
-
 //Mért hálózati frekvencia
 float spotWelderSystemPeriodTime = 0.0;
 
@@ -261,9 +258,9 @@ MenuState_t menuState = OFF;
 
 const byte MENU_VIEVPORT_LINEPOS[] = { 15, 25, 35 };
 typedef struct MenuViewport_t {
-	byte firstItem;
-	byte lastItem;
-	byte selectedItem;
+		byte firstItem;
+		byte lastItem;
+		byte selectedItem;
 } MenuViewPortT;
 MenuViewPortT menuViewport;
 #define MENU_VIEWPORT_SIZE 	3	/* Menü elemekbõl ennyi látszik */
@@ -275,12 +272,12 @@ typedef enum valueType_t {
 
 typedef void (*voidFuncPtr)(void);
 typedef struct MenuItem_t {
-	String title;					// Menüfelirat
-	valueType_t valueType;			// Érték típus
-	void *valuePtr;					// Az érték pointere
-	byte minValue;					// Minimális numerikus érték
-	byte maxValue;					// Maximális numerikus érték
-	voidFuncPtr callbackFunct; 		// Egyéb mûveletek függvény pointere, vagy NULL, ha nincs
+		String title;					// Menüfelirat
+		valueType_t valueType;			// Érték típus
+		void *valuePtr;					// Az érték pointere
+		byte minValue;					// Minimális numerikus érték
+		byte maxValue;					// Maximális numerikus érték
+		voidFuncPtr callbackFunct; 		// Egyéb mûveletek függvény pointere, vagy NULL, ha nincs
 } MenuItemT;
 #define LAST_MENUITEM_NDX 	8 /* Az utolsó menüelem indexe, 0-tól indul */
 MenuItemT menuItems[LAST_MENUITEM_NDX + 1];
@@ -413,15 +410,15 @@ void drawMenuItemValue() {
 
 	nokia5110Display.setCursor(5, 15);
 	switch (p.valueType) {
-	case TEMP:
-	case BYTE:
-	case BOOL:
-		nokia5110Display.print("Value");
-		break;
+		case TEMP:
+		case BYTE:
+		case BOOL:
+			nokia5110Display.print("Value");
+			break;
 
-	case PULSE:
-		nokia5110Display.print("Pulse");
-		break;
+		case PULSE:
+			nokia5110Display.print("Pulse");
+			break;
 	}
 
 	nokia5110Display.setTextSize(2);
@@ -430,41 +427,41 @@ void drawMenuItemValue() {
 	//Típus szerinti kiírás
 	String dspValue = "unknown";
 	switch (p.valueType) {
-	case BOOL:
-		dspValue = *(bool *) p.valuePtr ? "ON" : "OFF";
-		break;
+		case BOOL:
+			dspValue = *(bool *) p.valuePtr ? "ON" : "OFF";
+			break;
 
-	case PULSE:
-	case TEMP:
-	case BYTE:
-		dspValue = String(*(byte *) p.valuePtr);
-		break;
+		case PULSE:
+		case TEMP:
+		case BYTE:
+			dspValue = String(*(byte *) p.valuePtr);
+			break;
 	}
 	nokia5110Display.print(dspValue);
 
 	nokia5110Display.setTextSize(1);
 	switch (p.valueType) {
-	case BYTE:
-	case BOOL:
-		break;
+		case BYTE:
+		case BOOL:
+			break;
 
-	case TEMP:
-		nokia5110Display.setCursor(55, 30);
-		sprintf(tempBuff, "%cC", DEGREE_SYMBOL_CODE);
-		nokia5110Display.print(tempBuff);
-		break;
-
-	case PULSE:
-		if (spotWelderSystemPeriodTime > 0.0) {
-			//nokia5110Display.setCursor(55, 30);
-
-			nokia5110Display.setCursor(20, 40);
-			byte value = *(byte *) p.valuePtr;
-			long pulseLenght = spotWelderSystemPeriodTime * 1000.0 * value;
-			sprintf(tempBuff, "%d msec", pulseLenght);
+		case TEMP:
+			nokia5110Display.setCursor(55, 30);
+			sprintf(tempBuff, "%cC", DEGREE_SYMBOL_CODE);
 			nokia5110Display.print(tempBuff);
-		}
-		break;
+			break;
+
+		case PULSE:
+			if (spotWelderSystemPeriodTime > 0.0) {
+				//nokia5110Display.setCursor(55, 30);
+
+				nokia5110Display.setCursor(20, 40);
+				byte value = *(byte *) p.valuePtr;
+				long pulseLenght = spotWelderSystemPeriodTime * 1000.0 * value;
+				sprintf(tempBuff, "%d msec", pulseLenght);
+				nokia5110Display.print(tempBuff);
+			}
+			break;
 	}
 
 	nokia5110Display.display();
@@ -487,45 +484,45 @@ void itemMenuController(bool rotaryClicked, RotaryEncoderAdapter::Direction rota
 
 		switch (rotaryDirection) {
 
-		case RotaryEncoderAdapter::Direction::UP:
+			case RotaryEncoderAdapter::Direction::UP:
 
-			switch (p.valueType) {
-			case BYTE:
-			case PULSE:
-			case TEMP:
-				if (*(byte *) p.valuePtr < p.maxValue) {
-					(*(byte *) p.valuePtr)++;
+				switch (p.valueType) {
+					case BYTE:
+					case PULSE:
+					case TEMP:
+						if (*(byte *) p.valuePtr < p.maxValue) {
+							(*(byte *) p.valuePtr)++;
+						}
+						break;
+
+					case BOOL:
+						if (!*(bool *) p.valuePtr) { //ha most false, akkor true-t csinálunk belõle
+							*(bool *) p.valuePtr = true;
+						}
+						break;
 				}
 				break;
 
-			case BOOL:
-				if (!*(bool *) p.valuePtr) { //ha most false, akkor true-t csinálunk belõle
-					*(bool *) p.valuePtr = true;
+			case RotaryEncoderAdapter::Direction::DOWN:
+				switch (p.valueType) {
+					case BYTE:
+					case PULSE:
+					case TEMP:
+						if (*(byte *) p.valuePtr > p.minValue) {
+							(*(byte *) p.valuePtr)--;
+						}
+						break;
+					case BOOL:
+						if (*(bool *) p.valuePtr) { //ha most true, akkor false-t csinálunk belõle
+							*(bool *) p.valuePtr = false;
+						}
+						break;
 				}
 				break;
-			}
-			break;
 
-		case RotaryEncoderAdapter::Direction::DOWN:
-			switch (p.valueType) {
-			case BYTE:
-			case PULSE:
-			case TEMP:
-				if (*(byte *) p.valuePtr > p.minValue) {
-					(*(byte *) p.valuePtr)--;
-				}
+			case RotaryEncoderAdapter::Direction::NONE:
+				//Csak kirajzoltatást kértek
 				break;
-			case BOOL:
-				if (*(bool *) p.valuePtr) { //ha most true, akkor false-t csinálunk belõle
-					*(bool *) p.valuePtr = false;
-				}
-				break;
-			}
-			break;
-
-		case RotaryEncoderAdapter::Direction::NONE:
-			//Csak kirajzoltatást kértek
-			break;
 		}
 
 		//Menuelem beálító képernyõ kirajzoltatása
@@ -558,42 +555,42 @@ void mainMenuController(bool rotaryClicked, RotaryEncoderAdapter::Direction rota
 	if (!rotaryClicked) {
 
 		switch (rotaryDirection) {
-		case RotaryEncoderAdapter::Direction::UP:
+			case RotaryEncoderAdapter::Direction::UP:
 
-			//Az utolsó elem a kiválasztott? Ha igen, akkor nem megyünk tovább
-			if (menuViewport.selectedItem == LAST_MENUITEM_NDX) {
+				//Az utolsó elem a kiválasztott? Ha igen, akkor nem megyünk tovább
+				if (menuViewport.selectedItem == LAST_MENUITEM_NDX) {
+					return;
+				}
+
+				//A következõ menüelem lesz a kiválasztott
+				menuViewport.selectedItem++;
+
+				//A viewport aljánál túljutottunk? Ha igen, akkor scrollozunk egyet lefelé
+				if (menuViewport.selectedItem > menuViewport.lastItem) {
+					menuViewport.firstItem++;
+					menuViewport.lastItem++;
+				}
+				break;
+
+			case RotaryEncoderAdapter::Direction::DOWN:
+
+				//Az elsõ elem a kiválasztott? Ha igen, akkor nem megyünk tovább
+				if (menuViewport.selectedItem == 0) {
+					return;
+				}
+
+				//Az elõzõ menüelem lesz a kiválasztott
+				menuViewport.selectedItem--;
+
+				//A viewport aljánál túljutottunk? Ha igen, akkor scrollozunk egyet lefelé
+				if (menuViewport.selectedItem < menuViewport.firstItem) {
+					menuViewport.firstItem--;
+					menuViewport.lastItem--;
+				}
+				break;
+
+			default:
 				return;
-			}
-
-			//A következõ menüelem lesz a kiválasztott
-			menuViewport.selectedItem++;
-
-			//A viewport aljánál túljutottunk? Ha igen, akkor scrollozunk egyet lefelé
-			if (menuViewport.selectedItem > menuViewport.lastItem) {
-				menuViewport.firstItem++;
-				menuViewport.lastItem++;
-			}
-			break;
-
-		case RotaryEncoderAdapter::Direction::DOWN:
-
-			//Az elsõ elem a kiválasztott? Ha igen, akkor nem megyünk tovább
-			if (menuViewport.selectedItem == 0) {
-				return;
-			}
-
-			//Az elõzõ menüelem lesz a kiválasztott
-			menuViewport.selectedItem--;
-
-			//A viewport aljánál túljutottunk? Ha igen, akkor scrollozunk egyet lefelé
-			if (menuViewport.selectedItem < menuViewport.firstItem) {
-				menuViewport.firstItem--;
-				menuViewport.lastItem--;
-			}
-			break;
-
-		default:
-			return;
 		}
 
 		drawMainMenu();
@@ -611,19 +608,19 @@ void mainMenuController(bool rotaryClicked, RotaryEncoderAdapter::Direction rota
 
 	//Típus szerint megyünk tovább
 	switch (p.valueType) {
-	//Ha ez egy értékbeállító almenü
-	case BOOL:
-	case BYTE:
-	case PULSE:
-	case TEMP:
-		menuState = ITEM_MENU;
-		itemMenuController(false, RotaryEncoderAdapter::Direction::NONE); //Kérünk egy menüelem beállító képernyõ kirajzolást
-		break;
+		//Ha ez egy értékbeállító almenü
+		case BOOL:
+		case BYTE:
+		case PULSE:
+		case TEMP:
+			menuState = ITEM_MENU;
+			itemMenuController(false, RotaryEncoderAdapter::Direction::NONE); //Kérünk egy menüelem beállító képernyõ kirajzolást
+			break;
 
-		//Csak egy függvényt kell hívni, az majd elintéz mindent
-	case FUNCT:
-		p.callbackFunct();
-		break;
+			//Csak egy függvényt kell hívni, az majd elintéz mindent
+		case FUNCT:
+			p.callbackFunct();
+			break;
 	}
 }
 
@@ -634,20 +631,20 @@ void menuController(bool rotaryClicked, RotaryEncoderAdapter::Direction rotaryDi
 
 	buzzerMenu();
 	switch (menuState) {
-	case OFF: 	// Nem látszik a fõmenü -> Ha kikkeltek, akkor belépünk a mübe
-		if (rotaryClicked) {
-			menuState = MAIN_MENU;
-			drawMainMenu(); //Kirajzoltatjuk a fõmenüt
-		}
-		break;
+		case OFF: 	// Nem látszik a fõmenü -> Ha kikkeltek, akkor belépünk a mübe
+			if (rotaryClicked) {
+				menuState = MAIN_MENU;
+				drawMainMenu(); //Kirajzoltatjuk a fõmenüt
+			}
+			break;
 
-	case MAIN_MENU: //Látszik a fõmenü
-		mainMenuController(rotaryClicked, rotaryDirection);
-		break;
+		case MAIN_MENU: //Látszik a fõmenü
+			mainMenuController(rotaryClicked, rotaryDirection);
+			break;
 
-	case ITEM_MENU: //Elem változtató menü látszik
-		itemMenuController(rotaryClicked, rotaryDirection);
-		break;
+		case ITEM_MENU: //Elem változtató menü látszik
+			itemMenuController(rotaryClicked, rotaryDirection);
+			break;
 	}
 }
 
@@ -656,68 +653,106 @@ void menuController(bool rotaryClicked, RotaryEncoderAdapter::Direction rotaryDi
  */
 void menuInactiveController() {
 	switch (menuState) {
-	case MAIN_MENU:
-		resetMenu(); //Kilépünk a menübõl
-		menuState = OFF;
-		break;
+		case MAIN_MENU:
+			resetMenu(); //Kilépünk a menübõl
+			menuState = OFF;
+			break;
 
-	case ITEM_MENU:
-		drawMainMenu(); //Kilépünk az almenübõl
-		menuState = MAIN_MENU;
+		case ITEM_MENU:
+			drawMainMenu(); //Kilépünk az almenübõl
+			menuState = MAIN_MENU;
 	}
 }
 //--- Spot Welding ---------------------------------------------------------------------------------------------------------------------------------------
+typedef enum weldState_t {
+	WELD_START, PRE_WELD, PAUSE_WELD, WELD, WELD_END
+} WeldState_T;
+volatile WeldState_T weldCurrentState = WELD_END; //hegesztési állapot jelzõ
+volatile uint16_t weldPeriodCnt = 0;	//Periódus Számláló, hegesztés alatt megszakításkor inkrementálódik
+
 /**
  * ZCD interrupt
  */
 void zeroCrossDetect(void) {
-	weldPeriodCnt++;
+
+	//Ha nincs pre (ez esetben már a pause sem érdekel), akkor mehet egybõl a weld
+	if (weldCurrentState == PRE_WELD && config.configVars.preWeldPulseCnt == 0) {
+		weldPeriodCnt = 0;
+		weldCurrentState = WELD;
+	}
+
+	switch (weldCurrentState) {
+
+		case WELD_START:	//ez csak azért kell, hogy szinkronba kerüljünk a hálózattal
+			weldCurrentState = PRE_WELD;
+			return;
+
+		case PRE_WELD: //A pre-ben vagyunk
+			//A Triakot csak akkor kapcsoljuk be, ha van elõinpulzus szám a konfigban, és nincs még bekapcsolva
+			if (digitalRead(TRIAC_PIN) == LOW && config.configVars.preWeldPulseCnt > 0) {
+				weldPeriodCnt = 0;
+				digitalWrite(TRIAC_PIN, HIGH); //TRIAC BE
+				return;
+			}
+
+
+			if (++weldPeriodCnt >= config.configVars.preWeldPulseCnt) {
+				digitalWrite(TRIAC_PIN, LOW); //TRIAC KI
+				weldPeriodCnt = 0;
+				weldCurrentState = PAUSE_WELD;
+			}
+			break;
+
+		case PAUSE_WELD: //A pause-ban vagyunk
+			if (++weldPeriodCnt >= config.configVars.pausePulseCnt) {
+				weldPeriodCnt = 0;
+				weldCurrentState = WELD;
+			}
+			break;
+
+		case WELD:
+			//bekapcsoljuk a triakot, ha még nincs bekapcsolva
+			if(digitalRead(TRIAC_PIN) == LOW){
+				weldPeriodCnt = 0;
+				digitalWrite(TRIAC_PIN, HIGH); //TRIAC BE
+				return;
+			}
+
+			//Ha elértük a pulzusszámot, akkor kikapcsolunk
+			if (++weldPeriodCnt >= config.configVars.weldPulseCnt) {
+				digitalWrite(TRIAC_PIN, LOW); //TRIAC KI
+				weldCurrentState = WELD_END;
+			}
+			break;
+
+		case WELD_END:
+			//Igaziból itt már nem csinálunk semmit sem
+			digitalWrite(TRIAC_PIN, LOW);	//triak ki, csak a biztonság kedvéért
+			break;
+	}
 }
 
 /**
  * Hegesztési protokoll
  */
 void weldButtonPushed(void) {
-	weldPeriodCnt = 0;
-
-	//interrupt on
-	sei();
+#define SLEEP_TIME_MSEC 50
 
 	//LED-be
 	digitalWrite(WELD_LED_PIN, HIGH);
 
-	//Ha engedélyezve van a kettõs impulzus
-	if (config.configVars.preWeldPulseCnt > 0) {
-		digitalWrite(TRIAC_PIN, HIGH);	//triak be
-		while (weldPeriodCnt <= config.configVars.preWeldPulseCnt) {
-			//NOP
-		}
+	//interrupt ON
+	weldCurrentState = WELD_START;
+	sei();
+	//Megvárjuk a hegesztési folyamat végét
+	while (weldCurrentState != WELD_END) {
+		delay(SLEEP_TIME_MSEC);
 	}
-
-	digitalWrite(TRIAC_PIN, LOW);	//triak ki
-	//Ha engedélyezve van a két hegesztési fázis közötti várakozás, akkor most várunk
-	//Ennek csak akkor van értelme, ha volt elsõ fázis
-	if (config.configVars.preWeldPulseCnt > 0 && config.configVars.pausePulseCnt > 0) {
-		weldPeriodCnt = 0;
-		while (weldPeriodCnt <= config.configVars.pausePulseCnt) {
-			//NOP
-		}
-	}
-
-	//Fõ hegesztési fázis
-	digitalWrite(TRIAC_PIN, HIGH);	//triak be
-	weldPeriodCnt = 0;
-	while (weldPeriodCnt <= config.configVars.weldPulseCnt) {
-		//NOP
-	}
-
-	digitalWrite(TRIAC_PIN, LOW);	//triak ki
-
-	//LED ki
-	digitalWrite(WELD_LED_PIN, LOW);
-
-	//interrupt tiltása
+	//interrupt OFF
 	cli();
+
+	digitalWrite(TRIAC_PIN, LOW);	//triak ki, csak a biztonság kedvéért
+	digitalWrite(WELD_LED_PIN, LOW); //LED ki
 }
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -771,7 +806,6 @@ void setup() {
 
 	//kiszámítjuk a periódus idõt
 	spotWelderSystemPeriodTime = 1 / (float) SYSTEM_FREQUENCY;
-
 }
 
 /**
@@ -787,7 +821,7 @@ void loop() {
 	byte weldButtonCurrentState = digitalRead(WELD_BUTTON_PIN);
 	if (weldButtonCurrentState != weldButtonPrevState && weldButtonCurrentState == HIGH && weldButtonPrevState == LOW) {
 		weldButtonPushed();
-		menuState = OFF; //kilépünk a menübõl, ha épp benne voltunk
+		menuState = OFF; //kilépünk majd a menübõl, ha épp benne voltunk
 	}
 	weldButtonPrevState = weldButtonCurrentState;
 
