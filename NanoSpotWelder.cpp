@@ -259,7 +259,7 @@ typedef enum MenuState_t {
 
 MenuState_t menuState = OFF;
 
-const byte MENU_VIEVPORT_LINEPOS[] = { 15, 25, 35 };
+const byte MENU_VIEVPORT_LINEPOS[] PROGMEM  = { 15, 25, 35 };
 typedef struct MenuViewport_t {
 		byte firstItem;
 		byte lastItem;
@@ -686,7 +686,7 @@ void menuInactiveController() {
 }
 //--- Spot Welding ---------------------------------------------------------------------------------------------------------------------------------------
 typedef enum weldState_t {
-	WELD_START, PRE_WELD, PAUSE_WELD, WELD, WELD_END
+	PRE_WELD, PAUSE_WELD, WELD, WELD_END
 } WeldState_T;
 volatile WeldState_T weldCurrentState = WELD_END; //hegesztési állapot jelzõ
 volatile uint16_t weldPeriodCnt = 0;	//Periódus Számláló, hegesztés alatt megszakításkor inkrementálódik
@@ -703,10 +703,6 @@ void zeroCrossDetect(void) {
 	}
 
 	switch (weldCurrentState) {
-
-//		case WELD_START:	//ez csak azért kell, hogy szinkronba kerüljünk a hálózattal
-//			weldCurrentState = PRE_WELD;
-//			return;
 
 		case PRE_WELD: //A pre-ben vagyunk
 			//A Triakot csak akkor kapcsoljuk be, ha van elõinpulzus szám a konfigban, és nincs még bekapcsolva
