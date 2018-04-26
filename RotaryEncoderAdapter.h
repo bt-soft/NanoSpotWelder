@@ -11,6 +11,22 @@
 #ifndef ROTARYENCODERADAPTER_H_
 #define ROTARYENCODERADAPTER_H_
 
+//Rotary Encoder
+/*
+ * KY-040- Rotary Encoder
+ *
+ *
+ * https://www.google.hu/imgres?imgurl=https%3A%2F%2Fi0.wp.com%2Fhenrysbench.capnfatz.com%2Fwp-content%2Fuploads%2F2015%2F05%2FKeyes-KY-040-Rotary-Encoder-Pin-Outs.png&imgrefurl=http%3A%2F%2Fhenrysbench.capnfatz.com%2Fhenrys-bench%2Farduino-sensors-and-input%2Fkeyes-ky-040-arduino-rotary-encoder-user-manual%2F&docid=_c4mGtu-_4T-7M&tbnid=C4A0RLRlbinkiM%3A&vet=10ahUKEwjKlcq8lqvaAhWNLlAKHSK5Bs4QMwh8KDgwOA..i&w=351&h=109&bih=959&biw=1920&q=ky-040%20rotary%20encoder%20simulation%20proteus&ved=0ahUKEwjKlcq8lqvaAhWNLlAKHSK5Bs4QMwh8KDgwOA&iact=mrc&uact=8
+ *  +--------------+
+ *  |          CLK |-- Encoder pin A
+ *  |           DT |-- Encoder pin B
+ *  |           SW |-- PushButton SW
+ *  |         +VCC |-- +5V
+ *  |          GND |-- Encoder pin C
+ *  +--------------+
+ *
+ * https://github.com/0xPIT/encoder/issues/7
+ */
 /**
  * KY-040 Rotary encoder adapter
  *  - lenyomás detektálása

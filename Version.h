@@ -1,5 +1,5 @@
 /*
- * NanoSpotWelderVersion.h
+ * Version.h
  *
  *  Created on: 2018. ápr. 15.
  *      Author: BT
