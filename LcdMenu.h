@@ -41,67 +41,67 @@
 
 class LcdMenu {
 
-	private:
-		char tempBuff[32];
-		Nokia5110Display *nokia5110Display;
+private:
+	char tempBuff[32];
+	Nokia5110Display *nokia5110Display;
 
-	public:
-		typedef enum MenuState_t {
-			OFF,	//Nem látható
-			MAIN_MENU, //Main menü látható
-			ITEM_MENU //Elem Beállító menü látható
-		};
+public:
+	typedef enum MenuState_t {
+		OFF,	//Nem látható
+		MAIN_MENU, //Main menü látható
+		ITEM_MENU //Elem Beállító menü látható
+	};
 
-		/* változtatható érték típusa */
-		typedef enum valueType_t {
-			BOOL, BYTE, PULSE, TEMP, FUNCT
-		};
+	/* változtatható érték típusa */
+	typedef enum valueType_t {
+		BOOL, BYTE, PULSE, TEMP, WELD, FUNCT
+	};
 
-		typedef struct MenuViewport_t {
-				byte firstItem;
-				byte lastItem;
-				byte selectedItem;
-		} MenuViewPortT;
+	typedef struct MenuViewport_t {
+		byte firstItem;
+		byte lastItem;
+		byte selectedItem;
+	} MenuViewPortT;
 
-		typedef void (LcdMenu::*voidFuncPtr)(void);
-		typedef struct MenuItem_t {
-				char *title;				// Menüfelirat
-				valueType_t valueType;		// Érték típus
-				void *valuePtr;				// Az érték pointere
-				byte minValue;				// Minimális numerikus érték
-				byte maxValue;				// Maximális numerikus érték
-				voidFuncPtr callbackFunct; 	// Egyéb mûveletek függvény pointere, vagy NULL, ha nincs
-		} MenuItemT;
+	typedef void (LcdMenu::*voidFuncPtr)(void);
+	typedef struct MenuItem_t {
+		char *title;				// Menüfelirat
+		valueType_t valueType;		// Érték típus
+		void *valuePtr;				// Az érték pointere
+		byte minValue;				// Minimális numerikus érték
+		byte maxValue;				// Maximális numerikus érték
+		voidFuncPtr callbackFunct; 	// Egyéb mûveletek függvény pointere, vagy NULL, ha nincs
+	} MenuItemT;
 
-	public:
-		MenuState_t menuState = OFF;
-		MenuViewPortT menuViewport;
-		MenuItemT menuItems[LAST_MENUITEM_NDX + 1];
+public:
+	MenuState_t menuState = OFF;
+	MenuViewPortT menuViewport;
+	MenuItemT menuItems[LAST_MENUITEM_NDX + 1];
 
-	public:
-		/**
-		 * Konstruktor
-		 */
-		LcdMenu(void);
-		void drawSplashScreen(void);
-		void resetMenu(void);
-		void drawTempValue(float *pCurrentMotTemp);
-		void drawMainDisplay(float *pCurrentMotTemp);
-		void drawWarningDisplay(float *pCurrentMotTemp);
-		void drawMainMenu(void);
-		void drawMenuItemValue();
+public:
+	/**
+	 * Konstruktor
+	 */
+	LcdMenu(void);
+	void drawSplashScreen(void);
+	void resetMenu(void);
+	void drawTempValue(float *pCurrentMotTemp);
+	void drawMainDisplay(float *pCurrentMotTemp);
+	void drawWarningDisplay(float *pCurrentMotTemp);
+	void drawMainMenu(void);
+	void drawMenuItemValue();
 
-	private:
-		void initMenuItems(void);
-		void menuLcdContrast(void);
-		void menuLcdBackLight(void);
-		void menuBeepState(void);
-		void menuFactoryReset(void);
-		void menuExit(void);
+private:
+	void initMenuItems(void);
+	void menuLcdContrast(void);
+	void menuLcdBackLight(void);
+	void menuBeepState(void);
+	void menuFactoryReset(void);
+	void menuExit(void);
 
-	private:
-		const byte MENU_VIEVPORT_LINEPOS[3] PROGMEM = { 15, 25, 35 };
-		String msecToStr(long x);
+private:
+	const byte MENU_VIEVPORT_LINEPOS[3] PROGMEM = { 15, 25, 35 };
+	String msecToStr(long x);
 
 };
 

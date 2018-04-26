@@ -18,7 +18,10 @@
 #define DEF_PAUSE_PULSE_CNT 		50	 	/* 500ms */
 #define DEF_WELD_PULSE_CNT 			20 		/* 200ms */
 
+#define DEF_MOT_TEMP_ALARM 			70 		/* MOT hõmérséklet riasztás bekapcsolási határ °C-ban */
 
-#define DEF_MOT_TEMP_ALARM 			70 		/* MOT hõmérséklet riasztás */
+
+#define SYSTEM_FREQUENCY			50.0	/* A ~230V-os hálózat frekvenciája Hz-ben */
+
 
 #endif /* DEFAULTS_H_ */

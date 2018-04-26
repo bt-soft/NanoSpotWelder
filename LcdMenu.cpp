@@ -58,7 +58,7 @@ void LcdMenu::drawSplashScreen(void) {
  */
 void LcdMenu::initMenuItems(void) {
 
-	menuItems[0] = {"Pulse Mode", BOOL, &pConfig->configVars.pulseCountWeldMode, 0, 1, NULL};
+	menuItems[0] = {"Weld mode", WELD, &pConfig->configVars.pulseCountWeldMode, 0, 1, NULL};
 	menuItems[1] = {"PreWeld pulse", PULSE, &pConfig->configVars.preWeldPulseCnt, 0, 255, NULL};
 	menuItems[2] = {"Pause pulse", PULSE, &pConfig->configVars.pausePulseCnt, 0, 255, NULL};
 	menuItems[3] = {"Weld pulse", PULSE, &pConfig->configVars.weldPulseCnt, 1, 255, NULL};
@@ -79,7 +79,6 @@ void LcdMenu::resetMenu(void) {
 	menuViewport.lastItem = MENU_VIEWPORT_SIZE - 1;
 	menuViewport.selectedItem = 0;
 }
-
 
 /**
  * Hõmérséklet kiírása a main- és az alarm screen-nél
@@ -123,8 +122,6 @@ void LcdMenu::drawMainDisplay(float *pCurrentMotTemp) {
 	nokia5110Display->display();
 }
 
-
-
 /**
  * Magas hõmérséklet riasztás
  */
@@ -143,7 +140,6 @@ void LcdMenu::drawWarningDisplay(float *pCurrentMotTemp) {
 
 	nokia5110Display->display();
 }
-
 
 /**
  * MainMenu kirajzolása
@@ -196,11 +192,17 @@ void LcdMenu::drawMenuItemValue() {
 	nokia5110Display->drawFastHLine(0, 10, 83, BLACK);
 
 	nokia5110Display->setCursor(5, 15);
+
+	//Prompt
 	switch (p.valueType) {
 		case TEMP:
 		case BYTE:
 		case BOOL:
 			nokia5110Display->print("Value");
+			break;
+
+		case WELD:
+			nokia5110Display->print("Mode");
 			break;
 
 		case PULSE:
@@ -218,6 +220,10 @@ void LcdMenu::drawMenuItemValue() {
 			dspValue = *(bool *) p.valuePtr ? "ON" : "OFF";
 			break;
 
+		case WELD:
+			dspValue = *(bool *) p.valuePtr ? "Pulse" : "Manual";
+			break;
+
 		case PULSE:
 		case TEMP:
 		case BYTE:
@@ -226,31 +232,29 @@ void LcdMenu::drawMenuItemValue() {
 	}
 	nokia5110Display->print(dspValue);
 
+	//Mértékegység
 	nokia5110Display->setTextSize(1);
 	switch (p.valueType) {
-		case BYTE:
-		case BOOL:
-			break;
 
-		case TEMP:
+		case TEMP: //°C kiírás
 			nokia5110Display->setCursor(55, 30);
 			sprintf(tempBuff, "%cC", DEGREE_SYMBOL_CODE);
 			nokia5110Display->print(tempBuff);
 			break;
 
-		case PULSE:
+		case PULSE: //msec kiírás
 			if (pConfig->spotWelderSystemPeriodTime > 0.0) {
 				nokia5110Display->setCursor(35, 40);
 				nokia5110Display->print(msecToStr(pConfig->spotWelderSystemPeriodTime * 1000.0 * *(byte *) p.valuePtr));
 			}
 			break;
+
+		default:
+			break;
 	}
 
 	nokia5110Display->display();
 }
-
-
-
 
 //------------------------------------------------------------------- Menüelemek callback függvényei
 /**
@@ -317,13 +321,10 @@ void LcdMenu::menuExit(void) {
 	nokia5110Display->clearDisplay();
 	nokia5110Display->display();
 
-
 	//menü alapállapotba
 	resetMenu();
 	menuState = OFF; //Kilépünk a menübõl
 }
-
-
 
 // ------------------------------------------------------ utils
 /**
