@@ -35,3 +35,5 @@
 
 *.workspace
 *.pdsbak
+
+*.s#*
