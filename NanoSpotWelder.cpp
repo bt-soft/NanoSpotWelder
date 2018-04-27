@@ -40,7 +40,7 @@ LcdMenu *lcdMenu;
 Buzzer *pBuzzer;
 
 // -- Runtime adatok
-long lastMiliSec = -1;				// hõmérséklet mmérésre, menü tétlenségi idõ detektálása*/
+long lastMiliSec = 0;				// hõmérséklet mmérésre, menü tétlenségi idõ detektálása*/
 
 //A konfigban megadott ventilátor riasztási °C érték elõtt ennyivel bekapcsolunk, vagy ennyivel utána kikapcsolunk
 #define VENTILATOR_TRIGGER_OFFSET_VALUE	10
@@ -76,10 +76,16 @@ bool mainDisplayController(void) {
 
 		//Hõmérséklet lekérése -> csak egy DS18B20 mérõnk van -> 0 az index
 		tempSensors.requestTemperaturesByIndex(MOT_TEMP_SENSOR_NDX);
-		while (!tempSensors.isConversionComplete()) {
-			delayMicroseconds(100);
-		}
+//		while (!tempSensors.isConversionComplete()) {
+//			delayMicroseconds(100);
+//		}
+
 		float currentMotTemp = tempSensors.getTempCByIndex(MOT_TEMP_SENSOR_NDX);
+
+#ifdef SERIAL_DEBUG
+		Serial.print("MOT Temp: ");
+		Serial.println(currentMotTemp);
+#endif
 
 		//Magas a hõmérséklet?
 		if (currentMotTemp >= pConfig->configVars.motTempAlarm) {
@@ -484,5 +490,6 @@ void loop(void) {
 	if (lcdMenu->menuState == LcdMenu::OFF && pConfig->wantSaveConfig) {
 		pConfig->save();
 	}
+
 }
 

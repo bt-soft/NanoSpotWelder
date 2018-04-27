@@ -23,9 +23,6 @@
 #define PIN_VENTILATOR			A3
 
 
-//------------------- Beeper
-#define PIN_BUZZER 				13
-
 
 //------------------- LCD Display
 #define PIN_LCD_BLACKLIGHT 		9
@@ -41,6 +38,8 @@
 #define PIN_WELD_LED 			11		/* D11 Hegesztés LED visszajelzés */
 #define PIN_WELD_BUTTON 		10 		/* D10 Hegesztés gomb */
 
+//------------------- Beeper
+#define PIN_BUZZER 				13
 
 
 

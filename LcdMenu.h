@@ -111,7 +111,7 @@ private:
 	void menuExit(void);
 
 private:
-	const byte MENU_VIEVPORT_LINEPOS[3] PROGMEM = { 15, 25, 35 };
+	const byte PROGMEM MENU_VIEVPORT_LINEPOS[3] = { 15, 25, 35 };
 	String msecToStr(long x);
 
 };

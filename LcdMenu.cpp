@@ -24,6 +24,7 @@ LcdMenu::LcdMenu(void) {
 	//Menüelemek inicializálása
 	initMenuItems();
 	resetMenu();
+	menuState = OFF;
 }
 
 /**
@@ -85,12 +86,12 @@ void LcdMenu::resetMenu(void) {
  */
 void LcdMenu::drawTempValue(float *pCurrentMotTemp) {
 	nokia5110Display->setTextSize(2);
-	nokia5110Display->setCursor(18, 32);
+	nokia5110Display->setCursor(abs(*pCurrentMotTemp) > 99.9 ? 0 : 18, 32);
 	dtostrf(*pCurrentMotTemp, 1, 1, tempBuff);
 	nokia5110Display->print(tempBuff);
 
 	nokia5110Display->setTextSize(1);
-	nokia5110Display->setCursor(68, 38);
+	nokia5110Display->setCursor(72, 38);
 	sprintf(tempBuff, "%cC", DEGREE_SYMBOL_CODE);
 	nokia5110Display->print(tempBuff);
 }
@@ -106,7 +107,7 @@ void LcdMenu::drawMainDisplay(float *pCurrentMotTemp) {
 
 	//Pulzusszámláló mód
 	if (pConfig->configVars.pulseCountWeldMode) {
-		nokia5110Display->println("PWld  Pse  Wld");
+		nokia5110Display->println("Pwld  Paus Wld");
 		sprintf(tempBuff, "%-3d   %-3d  %-3d", pConfig->configVars.preWeldPulseCnt, pConfig->configVars.pausePulseCnt, pConfig->configVars.weldPulseCnt);
 		nokia5110Display->println(tempBuff);
 	} else { //kézi hegesztés
@@ -116,7 +117,8 @@ void LcdMenu::drawMainDisplay(float *pCurrentMotTemp) {
 	}
 
 	//Hõmérséklet kiírása
-	nokia5110Display->print("\nMOT Temp");
+	nokia5110Display->setCursor(0, 22);
+	nokia5110Display->print("MOT Temp:");
 	this->drawTempValue(pCurrentMotTemp);
 
 	nokia5110Display->display();

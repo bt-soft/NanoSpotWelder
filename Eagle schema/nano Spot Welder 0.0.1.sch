@@ -10320,6 +10320,11 @@ EC12E series with push-on switch</description>
 <wire x1="-22.86" y1="33.02" x2="-15.24" y2="33.02" width="0.1524" layer="91"/>
 <label x="-17.78" y="33.02" size="1.778" layer="95"/>
 </segment>
+<segment>
+<pinref part="U1" gate="G$1" pin="D13"/>
+<wire x1="-48.26" y1="119.38" x2="-53.34" y2="119.38" width="0.1524" layer="91"/>
+<label x="-50.8" y="121.92" size="1.778" layer="95" rot="R180"/>
+</segment>
 </net>
 <net name="D11" class="0">
 <segment>
@@ -10343,11 +10348,6 @@ EC12E series with push-on switch</description>
 <pinref part="R9" gate="G$1" pin="2"/>
 <wire x1="-93.98" y1="-22.86" x2="-101.6" y2="-22.86" width="0.1524" layer="91"/>
 <label x="-101.6" y="-22.86" size="1.778" layer="95"/>
-</segment>
-<segment>
-<pinref part="U1" gate="G$1" pin="D13"/>
-<wire x1="-48.26" y1="119.38" x2="-53.34" y2="119.38" width="0.1524" layer="91"/>
-<label x="-50.8" y="121.92" size="1.778" layer="95" rot="R180"/>
 </segment>
 </net>
 <net name="D2" class="0">
