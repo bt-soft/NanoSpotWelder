@@ -17,9 +17,9 @@ LcdMenu::LcdMenu(void) {
 	nokia5110Display = new Nokia5110Display(PIN_LCD_SCLK, PIN_LCD_DIN, PIN_LCD_DC, PIN_LCD_CS, PIN_LCD_RST);
 
 	//--- Display
-	nokia5110Display->setBlackLightPin(PIN_LCD_BLACKLIGHT);
-	nokia5110Display->setContrast(pConfig->configVars.contrast);	//kontraszt
-	nokia5110Display->setBlackLightState(pConfig->configVars.blackLightState);	//háttérvilágítás
+	nokia5110Display->setContrast(pConfig->configVars.contrast);	//kontraszt beállítása
+	nokia5110Display->setBlackLightPin(PIN_LCD_BLACKLIGHT);	//háttérvilágítás PIN beállítása
+	nokia5110Display->setBlackLightState(pConfig->configVars.blackLightState);	//háttérvilágítás beállítása a konfig szerint
 
 	//Menüelemek inicializálása
 	initMenuItems();
@@ -256,6 +256,104 @@ void LcdMenu::drawMenuItemValue() {
 	nokia5110Display->display();
 }
 
+/**
+ * Menüben lefelé lépkedés
+ */
+void LcdMenu::stepDown(void) {
+	//Az utolsó elem a kiválasztott? Ha igen, akkor nem megyünk tovább
+	if (menuViewport.selectedItem == LAST_MENUITEM_NDX) {
+		return;
+	}
+
+	//A következõ menüelem lesz a kiválasztott
+	menuViewport.selectedItem++;
+
+	//A viewport aljánál túljutottunk? Ha igen, akkor scrollozunk egyet lefelé
+	if (menuViewport.selectedItem > menuViewport.lastItem) {
+		menuViewport.firstItem++;
+		menuViewport.lastItem++;
+	}
+}
+
+/**
+ * Menüben lefelé lépkedés
+ */
+void LcdMenu::stepUp(void) {
+	//Az elsõ elem a kiválasztott? Ha igen, akkor nem megyünk tovább
+	if (menuViewport.selectedItem == 0) {
+		return;
+	}
+
+	//Az elõzõ menüelem lesz a kiválasztott
+	menuViewport.selectedItem--;
+
+	//A viewport aljánál túljutottunk? Ha igen, akkor scrollozunk egyet lefelé
+	if (menuViewport.selectedItem < menuViewport.firstItem) {
+		menuViewport.firstItem--;
+		menuViewport.lastItem--;
+	}
+
+}
+
+/**
+ * A kiválasztott menüelem értékének növelése
+ */
+void LcdMenu::incSelectedValue(void) {
+	MenuItemT *pSelectedMenuItem = this->getSelectedItemPtr();
+
+	switch (pSelectedMenuItem->valueType) {
+		case LcdMenu::BYTE:
+		case LcdMenu::PULSE:
+		case LcdMenu::TEMP:
+			if (*(byte *) pSelectedMenuItem->valuePtr < pSelectedMenuItem->maxValue) {
+				(*(byte *) pSelectedMenuItem->valuePtr)++;
+			}
+			break;
+
+		case LcdMenu::WELD:
+		case LcdMenu::BOOL:
+			if (!*(bool *) pSelectedMenuItem->valuePtr) { //ha most false, akkor true-t csinálunk belõle
+				*(bool *) pSelectedMenuItem->valuePtr = true;
+			}
+			break;
+	}
+}
+/**
+ * A kiválasztott menüelem értékének csökkentése
+ */
+void LcdMenu::decSelectedValue(void) {
+
+	MenuItemT *pSelectedMenuItem = this->getSelectedItemPtr();
+
+	switch (pSelectedMenuItem->valueType) {
+		case LcdMenu::BYTE:
+		case LcdMenu::PULSE:
+		case LcdMenu::TEMP:
+			if (*(byte *) pSelectedMenuItem->valuePtr > pSelectedMenuItem->minValue) {
+				(*(byte *) pSelectedMenuItem->valuePtr)--;
+			}
+			break;
+
+		case LcdMenu::WELD:
+		case LcdMenu::BOOL:
+			if (*(bool *) pSelectedMenuItem->valuePtr) { //ha most true, akkor false-t csinálunk belõle
+				*(bool *) pSelectedMenuItem->valuePtr = false;
+			}
+			break;
+	}
+}
+
+/**
+ * Menüelemhez tartozó segédfüggvény meghívása - ha van
+ */
+void LcdMenu::invokeMenuItemCallBackFunct(void) {
+
+	MenuItemT *pSelectedMenuItem = this->getSelectedItemPtr();
+	if (pSelectedMenuItem->callbackFunct != NULL) {
+		(this->*(pSelectedMenuItem->callbackFunct))();
+	}
+}
+
 //------------------------------------------------------------------- Menüelemek callback függvényei
 /**
  * Kontraszt kezelése
@@ -319,6 +417,10 @@ void LcdMenu::menuFactoryReset(void) {
 void LcdMenu::menuExit(void) {
 
 	nokia5110Display->clearDisplay();
+	nokia5110Display->setTextColor(BLACK, WHITE);
+	nokia5110Display->setTextSize(1);
+	nokia5110Display->setCursor(0, 20);
+	nokia5110Display->print("Exit from menu");
 	nokia5110Display->display();
 
 	//menü alapállapotba

@@ -42,8 +42,15 @@
 class LcdMenu {
 
 private:
-	char tempBuff[32];
-	Nokia5110Display *nokia5110Display;
+	char 				tempBuff[32];
+	Nokia5110Display 	*nokia5110Display;
+
+	typedef struct MenuViewport_t {
+		byte firstItem;
+		byte lastItem;
+		byte selectedItem;
+	} MenuViewPortT;
+	MenuViewPortT 		menuViewport;
 
 public:
 	typedef enum MenuState_t {
@@ -57,12 +64,6 @@ public:
 		BOOL, BYTE, PULSE, TEMP, WELD, FUNCT
 	};
 
-	typedef struct MenuViewport_t {
-		byte firstItem;
-		byte lastItem;
-		byte selectedItem;
-	} MenuViewPortT;
-
 	typedef void (LcdMenu::*voidFuncPtr)(void);
 	typedef struct MenuItem_t {
 		char *title;				// Menüfelirat
@@ -73,12 +74,10 @@ public:
 		voidFuncPtr callbackFunct; 	// Egyéb mûveletek függvény pointere, vagy NULL, ha nincs
 	} MenuItemT;
 
-public:
+
 	MenuState_t menuState = OFF;
-	MenuViewPortT menuViewport;
 	MenuItemT menuItems[LAST_MENUITEM_NDX + 1];
 
-public:
 	/**
 	 * Konstruktor
 	 */
@@ -90,6 +89,18 @@ public:
 	void drawWarningDisplay(float *pCurrentMotTemp);
 	void drawMainMenu(void);
 	void drawMenuItemValue();
+	void stepDown(void);
+	void stepUp(void);
+	void incSelectedValue(void);
+	void decSelectedValue(void);
+	void invokeMenuItemCallBackFunct(void);
+
+	/**
+	 * Kiválasztott menüelem pointerének elkérése
+	 */
+	MenuItemT *getSelectedItemPtr() {
+		return &menuItems[menuViewport.selectedItem];
+	}
 
 private:
 	void initMenuItems(void);

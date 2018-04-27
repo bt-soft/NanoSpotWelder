@@ -1,5 +1,5 @@
 /*
- * RotaryEncoderAdapter.h
+ * RotaryEncoderWrapper.h
  *
  *  Created on: 2018. ápr. 17.
  *      Author: BT
@@ -9,7 +9,7 @@
 #include "ky-040.h"
 
 #ifndef ROTARYENCODERADAPTER_H_
-#define ROTARYENCODERADAPTER_H_
+#define ROTARYENCODERWRAPPER_H_
 
 //Rotary Encoder
 /*
@@ -32,7 +32,7 @@
  *  - lenyomás detektálása
  *  - irány detektálása
  */
-class RotaryEncoderAdapter: public ky040 {
+class RotaryEncoderWrapper: public ky040 {
 
 #define ROTARY_ID1			1		/* Rotary encoder ID */
 
@@ -55,7 +55,10 @@ class RotaryEncoderAdapter: public ky040 {
 		} RotaryEncoderResult;
 
 	public:
-		RotaryEncoderAdapter(uint8_t interruptClkPin, uint8_t dataPin, uint8_t switchPin, uint8_t maxRotarys = 1) :
+		/**
+		 * Konstruktor
+		 */
+		RotaryEncoderWrapper(uint8_t interruptClkPin, uint8_t dataPin, uint8_t switchPin, uint8_t maxRotarys = 1) :
 				ky040(interruptClkPin, dataPin, switchPin, maxRotarys) {
 		}
 
@@ -67,7 +70,7 @@ class RotaryEncoderAdapter: public ky040 {
 			// Intervallum: -50...+50
 			// Lépés: 2
 			// Kezdeti érték: 0
-			// Túlhajtás: nem
+			// Túlhajtás: igen
 			ky040::AddRotaryCounter(ROTARY_ID1, 0, -255, 255, 1, true /*rollOver*/);
 			ky040::SetRotary(ROTARY_ID1);
 			lastRotaryValue = ky040::GetRotaryValue(ROTARY_ID1);

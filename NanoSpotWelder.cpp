@@ -11,9 +11,9 @@
 
 #include "NanoSpotWederPinouts.h"
 #include "Config.h"
-#include "RotaryEncoderAdapter.h"
 #include "LcdMenu.h"
 #include "Buzzer.h"
+#include "RotaryEncoderWrapper.h"
 
 //Serial konzol debug ON
 //#define SERIAL_DEBUG
@@ -29,7 +29,7 @@ DallasTemperature tempSensors(&oneWire);
 Config *pConfig;
 
 //--- Rotary Encoder
-RotaryEncoderAdapter *pRotaryEncoder;
+RotaryEncoderWrapper *pRotaryEncoder;
 
 // --- Menü
 //Menü inaktivitási idõ másodpercben
@@ -68,9 +68,9 @@ void ventilatorController(float *currentMotTemp) {
  * Main display vezérlés
  * Ha MOT hõmérsékleti riasztás van, akkor true-val térünk vissza
  */
-bool mainDisplayController() {
+bool mainDisplayController(void) {
 
-	bool highTemp = false;
+	bool highTempAlarm = false;
 
 	if ((millis() - lastMiliSec) > 1000) {
 
@@ -86,7 +86,7 @@ bool mainDisplayController() {
 			lastMotTemp = currentMotTemp;
 			lcdMenu->drawWarningDisplay(&currentMotTemp);
 			pBuzzer->buzzerAlarm();
-			highTemp = true;
+			highTempAlarm = true;
 
 		} else if (lastMotTemp == -1.0f || abs(lastMotTemp - currentMotTemp) > TEMP_DIFF_TO_DISPLAY) {
 			//Csak az elsõ és a TEMP_DIFF_TO_DISPLAY-nál nagyobb eltérésekre reagálunk
@@ -100,69 +100,35 @@ bool mainDisplayController() {
 		ventilatorController(&currentMotTemp);
 	}
 
-	return highTemp;
+	return highTempAlarm;
 }
 
 /**
  * Elembeállító menü kontroller
  */
-void itemMenuController(bool rotaryClicked, RotaryEncoderAdapter::Direction rotaryDirection) {
+void itemMenuController(bool rotaryClicked, RotaryEncoderWrapper::Direction rotaryDirection) {
 
 	if (lcdMenu->menuState != LcdMenu::ITEM_MENU) {
 		return;
 	}
-
-	//Kinyerjük a kiválasztott menüelem pointerét
-	LcdMenu::MenuItemT p = lcdMenu->menuItems[lcdMenu->menuViewport.selectedItem];
 
 	//Nem klikkeltek -> csak változtatják az elem értékét
 	if (!rotaryClicked) {
 
 		switch (rotaryDirection) {
 
-			case RotaryEncoderAdapter::Direction::UP:
-
-				switch (p.valueType) {
-					case LcdMenu::BYTE:
-					case LcdMenu::PULSE:
-					case LcdMenu::TEMP:
-						if (*(byte *) p.valuePtr < p.maxValue) {
-							(*(byte *) p.valuePtr)++;
-						}
-						break;
-
-					case LcdMenu::WELD:
-					case LcdMenu::BOOL:
-						if (!*(bool *) p.valuePtr) { //ha most false, akkor true-t csinálunk belõle
-							*(bool *) p.valuePtr = true;
-						}
-						break;
-				}
+			case RotaryEncoderWrapper::Direction::UP:
+				lcdMenu->incSelectedValue();
 				pConfig->wantSaveConfig = true;
 				break;
 
-			case RotaryEncoderAdapter::Direction::DOWN:
-				switch (p.valueType) {
-					case LcdMenu::BYTE:
-					case LcdMenu::PULSE:
-					case LcdMenu::TEMP:
-						if (*(byte *) p.valuePtr > p.minValue) {
-							(*(byte *) p.valuePtr)--;
-						}
-						break;
-
-					case LcdMenu::WELD:
-					case LcdMenu::BOOL:
-						if (*(bool *) p.valuePtr) { //ha most true, akkor false-t csinálunk belõle
-							*(bool *) p.valuePtr = false;
-						}
-						break;
-				}
+			case RotaryEncoderWrapper::Direction::DOWN:
+				lcdMenu->decSelectedValue();
 				pConfig->wantSaveConfig = true;
 				break;
 
-			case RotaryEncoderAdapter::Direction::NONE:
-				//Csak kirajzoltatást kértek
+			//Csak kirajzoltatást kértek
+			case RotaryEncoderWrapper::Direction::NONE:
 				break;
 		}
 
@@ -170,9 +136,7 @@ void itemMenuController(bool rotaryClicked, RotaryEncoderAdapter::Direction rota
 		lcdMenu->drawMenuItemValue();
 
 		//Ha van az almenühöz hozzá callback, akkor azt is meghívjuk
-		if (p.callbackFunct != NULL) {
-			(lcdMenu->*(p.callbackFunct))();
-		}
+		lcdMenu->invokeMenuItemCallBackFunct();
 
 		return;
 
@@ -186,7 +150,7 @@ void itemMenuController(bool rotaryClicked, RotaryEncoderAdapter::Direction rota
 /**
  * Fõmenü kontroller
  */
-void mainMenuController(bool rotaryClicked, RotaryEncoderAdapter::Direction rotaryDirection) {
+void mainMenuController(bool rotaryClicked, RotaryEncoderWrapper::Direction rotaryDirection) {
 
 	if (lcdMenu->menuState != LcdMenu::MAIN_MENU) {
 		return;
@@ -198,39 +162,13 @@ void mainMenuController(bool rotaryClicked, RotaryEncoderAdapter::Direction rota
 		switch (rotaryDirection) {
 
 			//Felfelé tekertek
-			case RotaryEncoderAdapter::Direction::UP:
-
-				//Az utolsó elem a kiválasztott? Ha igen, akkor nem megyünk tovább
-				if (lcdMenu->menuViewport.selectedItem == LAST_MENUITEM_NDX) {
-					return;
-				}
-
-				//A következõ menüelem lesz a kiválasztott
-				lcdMenu->menuViewport.selectedItem++;
-
-				//A viewport aljánál túljutottunk? Ha igen, akkor scrollozunk egyet lefelé
-				if (lcdMenu->menuViewport.selectedItem > lcdMenu->menuViewport.lastItem) {
-					lcdMenu->menuViewport.firstItem++;
-					lcdMenu->menuViewport.lastItem++;
-				}
+			case RotaryEncoderWrapper::Direction::UP:
+				lcdMenu->stepDown();
 				break;
 
 				//Lefelé tekertek
-			case RotaryEncoderAdapter::Direction::DOWN:
-
-				//Az elsõ elem a kiválasztott? Ha igen, akkor nem megyünk tovább
-				if (lcdMenu->menuViewport.selectedItem == 0) {
-					return;
-				}
-
-				//Az elõzõ menüelem lesz a kiválasztott
-				lcdMenu->menuViewport.selectedItem--;
-
-				//A viewport aljánál túljutottunk? Ha igen, akkor scrollozunk egyet lefelé
-				if (lcdMenu->menuViewport.selectedItem < lcdMenu->menuViewport.firstItem) {
-					lcdMenu->menuViewport.firstItem--;
-					lcdMenu->menuViewport.lastItem--;
-				}
+			case RotaryEncoderWrapper::Direction::DOWN:
+				lcdMenu->stepUp();
 				break;
 
 				//Nincs irány
@@ -249,29 +187,27 @@ void mainMenuController(bool rotaryClicked, RotaryEncoderAdapter::Direction rota
 	// - Kirajzoltatjuk az elem értékét
 	// - Átállítjuk az állapotott az elembeállításra
 	//
-	LcdMenu::MenuItemT p = lcdMenu->menuItems[lcdMenu->menuViewport.selectedItem];
 
 	//Típus szerint megyünk tovább
-	switch (p.valueType) {
+	switch (lcdMenu->getSelectedItemPtr()->valueType) {
 
 		//Ha ez egy értékbeállító almenü
 		//Csak egy függvényt kell hívni, az majd elintéz mindent
 		case LcdMenu::FUNCT:
-			(lcdMenu->*(p.callbackFunct))();
+			lcdMenu->invokeMenuItemCallBackFunct();
 			break;
 
 		default:
 			lcdMenu->menuState = LcdMenu::ITEM_MENU;
-			itemMenuController(false, RotaryEncoderAdapter::Direction::NONE); //Kérünk egy menüelem beállító képernyõ kirajzolást
+			itemMenuController(false, RotaryEncoderWrapper::Direction::NONE); //Kérünk egy menüelem beállító képernyõ kirajzolást
 			break;
-
 	}
 }
 
 /**
  * Menu kezelése
  */
-void menuController(bool rotaryClicked, RotaryEncoderAdapter::Direction rotaryDirection) {
+void menuController(bool rotaryClicked, RotaryEncoderWrapper::Direction rotaryDirection) {
 
 	//Csippantunk
 	pBuzzer->buzzerMenu();
@@ -301,7 +237,7 @@ void menuController(bool rotaryClicked, RotaryEncoderAdapter::Direction rotaryDi
 /**
  * Menü inaktivitás kezelése
  */
-void menuInactiveController() {
+void menuInactiveController(void) {
 
 	switch (lcdMenu->menuState) {
 
@@ -440,7 +376,7 @@ void weldButtonPushed(void) {
 /**
  * Boot beállítások
  */
-void setup() {
+void setup(void) {
 #ifdef SERIAL_DEBUG
 	Serial.begin(9600);
 	while (!Serial)
@@ -453,7 +389,7 @@ void setup() {
 	pConfig->read();
 
 	//Rotary encoder init
-	pRotaryEncoder = new RotaryEncoderAdapter(PIN_ENCODER_CLK, PIN_ENCODER_DT,
+	pRotaryEncoder = new RotaryEncoderWrapper(PIN_ENCODER_CLK, PIN_ENCODER_DT,
 	PIN_ENCODER_SW);
 	pRotaryEncoder->init();
 
@@ -495,7 +431,7 @@ void setup() {
 /**
  * Main loop
  */
-void loop() {
+void loop(void) {
 
 	static bool firstTime = true;	//elsõ futás jelzése
 	static byte weldButtonPrevState = LOW;   //A hegesztés gomb elõzõ állapota
@@ -529,10 +465,10 @@ void loop() {
 	}
 
 	//Rotary Encoder olvasása
-	RotaryEncoderAdapter::RotaryEncoderResult rotaryEncoderResult = pRotaryEncoder->readRotaryEncoder();
+	RotaryEncoderWrapper::RotaryEncoderResult rotaryEncoderResult = pRotaryEncoder->readRotaryEncoder();
 
 	//Ha klikkeltek VAGY van irány, akkor a menüt piszkáljuk
-	if (rotaryEncoderResult.clicked || rotaryEncoderResult.direction != RotaryEncoderAdapter::Direction::NONE) {
+	if (rotaryEncoderResult.clicked || rotaryEncoderResult.direction != RotaryEncoderWrapper::Direction::NONE) {
 		menuController(rotaryEncoderResult.clicked, rotaryEncoderResult.direction);
 		//menütétlenség 'reset'
 		lastMiliSec = millis();
