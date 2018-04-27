@@ -12,6 +12,8 @@
 #define ROTARYENCODERWRAPPER_H_
 
 //Rotary Encoder
+// https://github.com/Billwilliams1952/KY-040-Encoder-Library---Arduino
+
 /*
  * KY-040- Rotary Encoder
  *

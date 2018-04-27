@@ -53,12 +53,12 @@ void ventilatorController(float *currentMotTemp) {
 	int triggerValue = pConfig->configVars.motTempAlarm - VENTILATOR_TRIGGER_OFFSET_VALUE;
 
 	if (triggerValue > *currentMotTemp) {
-		if (digitalRead(PIN_VENTILATOR) == HIGH) {
+		if (digitalRead(PIN_VENTILATOR)) {
 			digitalWrite(PIN_VENTILATOR, LOW);
 		}
 
 	} else if (triggerValue <= *currentMotTemp) {
-		if (digitalRead(PIN_VENTILATOR) == LOW) {
+		if (!digitalRead(PIN_VENTILATOR)) {
 			digitalWrite(PIN_VENTILATOR, HIGH);
 		}
 	}
@@ -166,12 +166,12 @@ void mainMenuController(bool rotaryClicked, RotaryEncoderWrapper::Direction rota
 				lcdMenu->stepDown();
 				break;
 
-				//Lefelé tekertek
+			//Lefelé tekertek
 			case RotaryEncoderWrapper::Direction::DOWN:
 				lcdMenu->stepUp();
 				break;
 
-				//Nincs irány
+			//Nincs irány
 			default:
 				return;
 		}
@@ -280,7 +280,7 @@ void zeroCrossDetect(void) {
 		//A pre-ben vagyunk
 		case PRE_WELD:
 			//A Triakot csak akkor kapcsoljuk be, ha van elõinpulzus szám a konfigban, és nincs még bekapcsolva
-			if (digitalRead(PIN_TRIAC) == LOW && pConfig->configVars.preWeldPulseCnt > 0) {
+			if (!digitalRead(PIN_TRIAC) && pConfig->configVars.preWeldPulseCnt > 0) {
 				weldPeriodCnt = 0;
 				digitalWrite(PIN_TRIAC, HIGH); //TRIAC BE
 				return;
@@ -304,7 +304,7 @@ void zeroCrossDetect(void) {
 			//A fõ hegesztésben vagyunk
 		case WELD:
 			//bekapcsoljuk a triakot, ha még nincs bekapcsolva
-			if (digitalRead(PIN_TRIAC) == LOW) {
+			if (!digitalRead(PIN_TRIAC)) {
 				weldPeriodCnt = 0;
 				digitalWrite(PIN_TRIAC, HIGH); //TRIAC BE
 				return;
