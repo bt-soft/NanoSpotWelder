@@ -36,4 +36,5 @@
 *.workspace
 *.pdsbak
 
+#Eagle schema backup 
 *.s#*
