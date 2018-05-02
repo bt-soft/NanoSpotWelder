@@ -54,6 +54,7 @@ private:
 
 public:
 	typedef enum MenuState_t {
+		FORCE_MAIN_DISPLAY, //Izombõl kirajzoljuk a MainDisplay-t
 		OFF,	//Nem látható
 		MAIN_MENU, //Main menü látható
 		ITEM_MENU //Elem Beállító menü látható

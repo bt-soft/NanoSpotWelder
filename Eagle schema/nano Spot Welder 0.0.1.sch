@@ -10392,6 +10392,9 @@ CONN_03x2
 <text x="-88.9" y="111.76" size="1.778" layer="91">ISP</text>
 <text x="116.84" y="45.72" size="1.778" layer="91">KY-040 Rotary Encoder</text>
 <text x="109.22" y="-20.32" size="1.778" layer="91">MOT Temperature Measurement</text>
+<text x="88.9" y="63.5" size="1.778" layer="91">CLK</text>
+<text x="88.9" y="68.58" size="1.778" layer="91">SW</text>
+<text x="88.9" y="66.04" size="1.778" layer="91">DT</text>
 </plain>
 <instances>
 <instance part="U1" gate="G$1" x="-25.4" y="104.14" smashed="yes"/>

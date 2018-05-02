@@ -24,7 +24,6 @@ LcdMenu::LcdMenu(void) {
 	//Menüelemek inicializálása
 	initMenuItems();
 	resetMenu();
-	menuState = OFF;
 }
 
 /**
@@ -410,7 +409,7 @@ void LcdMenu::menuFactoryReset(void) {
 
 	//menü alapállapotba
 	resetMenu();
-	menuState = OFF;
+	menuState = FORCE_MAIN_DISPLAY;
 }
 
 /**
@@ -427,7 +426,7 @@ void LcdMenu::menuExit(void) {
 
 	//menü alapállapotba
 	resetMenu();
-	menuState = OFF; //Kilépünk a menübõl
+	menuState = FORCE_MAIN_DISPLAY; //Kilépünk a menübõl
 }
 
 // ------------------------------------------------------ utils

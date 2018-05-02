@@ -32,8 +32,11 @@ Config *pConfig;
 RotaryEncoderWrapper *pRotaryEncoder;
 
 // --- Menü
+//Másodpercenként nézünk rá a MOT hõmérsékletére
+#define MAIN_DISPLAY_LOOP_TIME			1000
+
 //Menü inaktivitási idõ másodpercben
-#define MENU_INACTIVE_IN_MSEC			(30 * 1000)
+#define MENU_INACTIVE_IN_MSEC			(30 /* Menü tétlenségi idõ limit mp-ben*/ * MAIN_DISPLAY_LOOP_TIME)
 LcdMenu *lcdMenu;
 
 // --- Buzzer
@@ -72,39 +75,34 @@ bool mainDisplayController(void) {
 
 	bool highTempAlarm = false;
 
-	if ((millis() - lastMiliSec) > 1000) {
-
-		//Hõmérséklet lekérése -> csak egy DS18B20 mérõnk van -> 0 az index
-		tempSensors.requestTemperaturesByIndex(MOT_TEMP_SENSOR_NDX);
+	//Hõmérséklet lekérése -> csak egy DS18B20 mérõnk van -> 0 az index
+	tempSensors.requestTemperaturesByIndex(MOT_TEMP_SENSOR_NDX);
 //		while (!tempSensors.isConversionComplete()) {
 //			delayMicroseconds(100);
 //		}
-
-		float currentMotTemp = tempSensors.getTempCByIndex(MOT_TEMP_SENSOR_NDX);
+//
+	float currentMotTemp = tempSensors.getTempCByIndex(MOT_TEMP_SENSOR_NDX);
 
 #ifdef SERIAL_DEBUG
-		Serial.print("MOT Temp: ");
-		Serial.println(currentMotTemp);
+	Serial.print("MOT Temp: ");
+	Serial.println(currentMotTemp);
 #endif
 
-		//Magas a hõmérséklet?
-		if (currentMotTemp >= pConfig->configVars.motTempAlarm) {
-			lastMotTemp = currentMotTemp;
-			lcdMenu->drawWarningDisplay(&currentMotTemp);
-			pBuzzer->buzzerAlarm();
-			highTempAlarm = true;
+	//Magas a hõmérséklet?
+	if (currentMotTemp >= pConfig->configVars.motTempAlarm) {
+		lastMotTemp = currentMotTemp;
+		lcdMenu->drawWarningDisplay(&currentMotTemp);
+		pBuzzer->buzzerAlarm();
+		highTempAlarm = true;
 
-		} else if (lastMotTemp == -1.0f || abs(lastMotTemp - currentMotTemp) > TEMP_DIFF_TO_DISPLAY) {
-			//Csak az elsõ és a TEMP_DIFF_TO_DISPLAY-nál nagyobb eltérésekre reagálunk
-			lastMotTemp = currentMotTemp;
-			lcdMenu->drawMainDisplay(&currentMotTemp);
-		}
-
-		lastMiliSec = millis();
-
-		//Ventilátor vezérlés
-		ventilatorController(&currentMotTemp);
+	} else if (lastMotTemp == -1.0f || abs(lastMotTemp - currentMotTemp) > TEMP_DIFF_TO_DISPLAY) {
+		//Csak az elsõ és a TEMP_DIFF_TO_DISPLAY-nál nagyobb eltérésekre reagálunk
+		lastMotTemp = currentMotTemp;
+		lcdMenu->drawMainDisplay(&currentMotTemp);
 	}
+
+	//Ventilátor vezérlés
+	ventilatorController(&currentMotTemp);
 
 	return highTempAlarm;
 }
@@ -133,7 +131,7 @@ void itemMenuController(bool rotaryClicked, RotaryEncoderWrapper::Direction rota
 				pConfig->wantSaveConfig = true;
 				break;
 
-			//Csak kirajzoltatást kértek
+				//Csak kirajzoltatást kértek
 			case RotaryEncoderWrapper::Direction::NONE:
 				break;
 		}
@@ -172,12 +170,12 @@ void mainMenuController(bool rotaryClicked, RotaryEncoderWrapper::Direction rota
 				lcdMenu->stepDown();
 				break;
 
-			//Lefelé tekertek
+				//Lefelé tekertek
 			case RotaryEncoderWrapper::Direction::DOWN:
 				lcdMenu->stepUp();
 				break;
 
-			//Nincs irány
+				//Nincs irány
 			default:
 				return;
 		}
@@ -245,12 +243,18 @@ void menuController(bool rotaryClicked, RotaryEncoderWrapper::Direction rotaryDi
  */
 void menuInactiveController(void) {
 
+#ifdef SERIAL_DEBUG
+	Serial.println("menuInactiveController()");
+#endif
+
 	switch (lcdMenu->menuState) {
 
 		//Main Menüben vagyunk
 		case LcdMenu::MAIN_MENU:
 			lcdMenu->resetMenu(); //Kilépünk a menübõl...
 			lcdMenu->menuState = LcdMenu::OFF;
+			lastMotTemp = -1.0f; //kierõszakoljuk a main display újrarajzoltatását
+			//lastMiliSec = -1;
 			break;
 
 			//Elembeállító menüben vagyunk
@@ -259,6 +263,7 @@ void menuInactiveController(void) {
 			lcdMenu->menuState = LcdMenu::MAIN_MENU;
 	}
 }
+
 //--- Spot Welding ---------------------------------------------------------------------------------------------------------------------------------------
 typedef enum weldState_t {
 	PRE_WELD, 		//Elõimpulzus
@@ -344,7 +349,8 @@ void weldButtonPushed(void) {
 	if (pConfig->configVars.pulseCountWeldMode) {
 
 		//Ráköltözünk a ZCD interrupt-ra
-		attachInterrupt(digitalPinToInterrupt(PIN_ZCD), zeroCrossDetect, FALLING);
+		attachInterrupt(digitalPinToInterrupt(PIN_ZCD), zeroCrossDetect,
+		FALLING);
 
 		//Beállítjuk, hogy a PRE_WELD állapotból induljunk
 		weldCurrentState = PRE_WELD;
@@ -386,7 +392,7 @@ void setup(void) {
 #ifdef SERIAL_DEBUG
 	Serial.begin(9600);
 	while (!Serial)
-	;
+		;
 	Serial.println("Debug active");
 #endif
 
@@ -410,7 +416,7 @@ void setup(void) {
 	pinMode(PIN_WELD_BUTTON, INPUT);
 
 	//--- ZCD input felhúzása
-	pinMode(PIN_ZCD, INPUT);
+	pinMode(PIN_ZCD, INPUT_PULLUP);
 
 	//--- Triac PIN
 	pinMode(PIN_TRIAC, OUTPUT);
@@ -442,6 +448,13 @@ void loop(void) {
 	static bool firstTime = true;	//elsõ futás jelzése
 	static byte weldButtonPrevState = LOW;   //A hegesztés gomb elõzõ állapota
 
+	//--- Indulási beállítások
+	if (firstTime) {
+		firstTime = false;
+		pRotaryEncoder->SetChanged();   // force an update on active rotary
+		pRotaryEncoder->readRotaryEncoder();   //elsõ kiolvasást eldobjuk
+	}
+
 	//
 	// --- Hegesztés kezelése -------------------------------------------------------------------
 	//
@@ -457,17 +470,24 @@ void loop(void) {
 	//Eltesszük az aktuális button állapotot
 	weldButtonPrevState = weldButtonCurrentState;
 
-	//--- MainDisplay kezelése
-	if (lcdMenu->menuState == LcdMenu::OFF) {
-		lastMotTemp = -1.0f; //kirõszakoljuk a mainScren kiíratását
-		mainDisplayController();
-	}
-
-	//--- Menü kezelése
-	if (firstTime) {
-		firstTime = false;
-		pRotaryEncoder->SetChanged();   // force an update on active rotary
-		pRotaryEncoder->readRotaryEncoder();   //elsõ kiolvasást eldobjuk
+	//
+	//--- MainDisplay kezelése --------------------------------------------------------------------
+	//
+	if(lcdMenu->menuState == LcdMenu::FORCE_MAIN_DISPLAY){
+		lcdMenu->menuState =LcdMenu::MAIN_MENU;
+		menuInactiveController();
+	} else if (lcdMenu->menuState == LcdMenu::OFF) {
+		//Menü tétlenség figyelése
+		if (millis() - lastMiliSec >= MAIN_DISPLAY_LOOP_TIME) {
+			mainDisplayController();
+			lastMiliSec = millis();
+		}
+	} else { //Valamilyen menüben vagyunk
+		//Menütétlenség figyelése
+		if ((millis() - lastMiliSec) >= MENU_INACTIVE_IN_MSEC) {
+			menuInactiveController();
+			lastMiliSec = millis();
+		}
 	}
 
 	//Rotary Encoder olvasása
@@ -476,20 +496,12 @@ void loop(void) {
 	//Ha klikkeltek VAGY van irány, akkor a menüt piszkáljuk
 	if (rotaryEncoderResult.clicked || rotaryEncoderResult.direction != RotaryEncoderWrapper::Direction::NONE) {
 		menuController(rotaryEncoderResult.clicked, rotaryEncoderResult.direction);
-		//menütétlenség 'reset'
-		lastMiliSec = millis();
-	}
-
-	//Menü tétlenség figyelése
-	if (lcdMenu->menuState != LcdMenu::OFF && ((millis() - lastMiliSec) > MENU_INACTIVE_IN_MSEC)) {
-		menuInactiveController();
-		lastMiliSec = millis();
+		lastMiliSec = millis(); //volt aktivitás, a timer mutatóját utánahúzzuk
 	}
 
 	//Ha már nem vagyunk a menüben, és kell menteni a konfigot, akkor azt most tesszük meg
 	if (lcdMenu->menuState == LcdMenu::OFF && pConfig->wantSaveConfig) {
 		pConfig->save();
 	}
-
 }
 
