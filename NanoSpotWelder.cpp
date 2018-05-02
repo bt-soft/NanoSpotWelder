@@ -213,14 +213,13 @@ void mainMenuController(bool rotaryClicked, RotaryEncoderWrapper::Direction rota
  */
 void menuController(bool rotaryClicked, RotaryEncoderWrapper::Direction rotaryDirection) {
 
-	//Csippantunk
-	pBuzzer->buzzerMenu();
 
 	switch (lcdMenu->menuState) {
 
 		// Nem látszik a fõmenü -> Ha kikkeltek, akkor belépünk a mübe
 		case LcdMenu::OFF:
 			if (rotaryClicked) {
+				pBuzzer->buzzerMenu();
 				lcdMenu->menuState = LcdMenu::MAIN_MENU;
 				lcdMenu->drawMainMenu(); //Kirajzoltatjuk a fõmenüt
 			}
@@ -228,11 +227,13 @@ void menuController(bool rotaryClicked, RotaryEncoderWrapper::Direction rotaryDi
 
 			//Látszik a fõmenü
 		case LcdMenu::MAIN_MENU:
+			pBuzzer->buzzerMenu();
 			mainMenuController(rotaryClicked, rotaryDirection);
 			break;
 
 			//Elem változtató menü látszik
 		case LcdMenu::ITEM_MENU:
+			pBuzzer->buzzerMenu();
 			itemMenuController(rotaryClicked, rotaryDirection);
 			break;
 	}
