@@ -9,8 +9,8 @@
 #define LCDMENU_H_
 
 #include "NanoSpotWederPinouts.h"
-#include "Nokia5110Display.h"
 #include "Config.h"
+#include "Nokia5110DisplayWrapper.h"
 
 // https://github.com/adafruit/Adafruit-PCD8544-Nokia-5110-LCD-library/blob/master/examples/pcdtest/pcdtest.ino
 //  Hardware SPI (faster, but must use certain hardware pins):
@@ -42,15 +42,15 @@
 class LcdMenu {
 
 private:
-	char 				tempBuff[32];
-	Nokia5110Display 	*nokia5110Display;
+	char 						tempBuff[32];
+	Nokia5110DisplayWrapper 	*nokia5110Display;
 
 	typedef struct MenuViewport_t {
 		byte firstItem;
 		byte lastItem;
 		byte selectedItem;
 	} MenuViewPortT;
-	MenuViewPortT 		menuViewport;
+	MenuViewPortT 				menuViewport;
 
 public:
 	typedef enum MenuState_t {
@@ -105,14 +105,14 @@ public:
 
 private:
 	void initMenuItems(void);
-	void menuLcdContrast(void);
-	void menuLcdBackLight(void);
-	void menuBeepState(void);
-	void menuFactoryReset(void);
-	void menuExit(void);
+	void lcdContrastCallBack(void);
+	void lcdBackLightCallBack(void);
+	void beepStateCallBack(void);
+	void factoryResetCallBack(void);
+	void exitCallBack(void);
 
 private:
-	const byte PROGMEM MENU_VIEVPORT_LINEPOS[3] = { 15, 25, 35 };
+	const byte PROGMEM MENU_VIEVPORT_LINEPOS[3] = { 15, 25, 35 };	//Menüelemek sorai
 	String msecToStr(long x);
 
 };

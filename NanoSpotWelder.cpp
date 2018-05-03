@@ -240,10 +240,6 @@ void menuController(bool rotaryClicked, RotaryEncoderWrapper::Direction rotaryDi
  */
 void menuInactiveController(void) {
 
-#ifdef SERIAL_DEBUG
-	Serial.println("menuInactiveController()");
-#endif
-
 	switch (lcdMenu->menuState) {
 
 		//Main Menüben vagyunk
@@ -336,7 +332,7 @@ void zeroCrossDetect(void) {
  * Hegesztési protokoll
  */
 void weldButtonPushed(void) {
-#define SLEEP_TIME_MSEC 50
+#define SLEEP_TIME_MICROSEC 100
 
 	//LED-be
 	digitalWrite(PIN_WELD_LED, HIGH);
@@ -352,7 +348,7 @@ void weldButtonPushed(void) {
 
 		//Megvárjuk a hegesztési folyamat végét
 		while (weldCurrentState != WELD_END) {
-			delay(SLEEP_TIME_MSEC);
+			delayMicroseconds(SLEEP_TIME_MICROSEC);
 		}
 
 		//Leszállunk a ZCD interrupt-ról
@@ -364,7 +360,7 @@ void weldButtonPushed(void) {
 
 		//Addig amíg a gomb le van nyomva, addig nem mozdulunk innen
 		while (digitalRead(PIN_WELD_BUTTON)) {
-			delay(SLEEP_TIME_MSEC * 2);
+			delayMicroseconds(SLEEP_TIME_MICROSEC * 10);
 		}
 
 		digitalWrite(PIN_TRIAC, LOW); //TRIAC KI
@@ -441,7 +437,7 @@ void setup(void) {
  */
 void loop(void) {
 
-	static byte weldButtonPrevState = LOW;   //A hegesztés gomb elõzõ állapota
+	static byte weldButtonPrevState = HIGH;   //A hegesztés gomb elõzõ állapota
 
 	//
 	// --- Hegesztés kezelése -------------------------------------------------------------------

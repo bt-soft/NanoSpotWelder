@@ -39,12 +39,12 @@ class Config {
 				bool blackLightState;		//háttévilágítás
 				bool beepState;				//beep
 
-				uint8_t contrast;			//LCD kontraszt érték
+				byte contrast;			//LCD kontraszt érték
 				uint8_t preWeldPulseCnt;	//elõhegesztés impulzus szám
 				uint8_t pausePulseCnt;		//szünet impulzus szám
 				uint8_t weldPulseCnt;		//hegesztés impulzus szám
 
-				uint8_t motTempAlarm;		//MOT hõmérséklet magas riasztás
+				byte motTempAlarm;		//MOT hõmérséklet magas riasztás
 
 		} ConfigT;
 

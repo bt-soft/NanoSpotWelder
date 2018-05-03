@@ -54,8 +54,8 @@ class Buzzer {
 				return;
 			}
 
-			tone(PIN_BUZZER, 800);
-			delay(10);
+			tone(PIN_BUZZER, 500);
+			delay(15);
 			noTone(PIN_BUZZER);
 		}
 
