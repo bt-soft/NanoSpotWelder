@@ -75,12 +75,9 @@ bool mainDisplayController(void) {
 
 	bool highTempAlarm = false;
 
-	//Hõmérséklet lekérése -> csak egy DS18B20 mérõnk van -> 0 az index
+	//MOT Hõmérséklet lekérése -> csak egy DS18B20 mérõnk van -> 0 az index
 	tempSensors.requestTemperaturesByIndex(MOT_TEMP_SENSOR_NDX);
-//		while (!tempSensors.isConversionComplete()) {
-//			delayMicroseconds(100);
-//		}
-//
+	//MOT Hõmérséklet kiolvasása
 	float currentMotTemp = tempSensors.getTempCByIndex(MOT_TEMP_SENSOR_NDX);
 
 #ifdef SERIAL_DEBUG
@@ -213,7 +210,6 @@ void mainMenuController(bool rotaryClicked, RotaryEncoderWrapper::Direction rota
  */
 void menuController(bool rotaryClicked, RotaryEncoderWrapper::Direction rotaryDirection) {
 
-
 	switch (lcdMenu->menuState) {
 
 		// Nem látszik a fõmenü -> Ha kikkeltek, akkor belépünk a mübe
@@ -255,7 +251,6 @@ void menuInactiveController(void) {
 			lcdMenu->resetMenu(); //Kilépünk a menübõl...
 			lcdMenu->menuState = LcdMenu::OFF;
 			lastMotTemp = -1.0f; //kierõszakoljuk a main display újrarajzoltatását
-			//lastMiliSec = -1;
 			break;
 
 			//Elembeállító menüben vagyunk
@@ -350,8 +345,7 @@ void weldButtonPushed(void) {
 	if (pConfig->configVars.pulseCountWeldMode) {
 
 		//Ráköltözünk a ZCD interrupt-ra
-		attachInterrupt(digitalPinToInterrupt(PIN_ZCD), zeroCrossDetect,
-		FALLING);
+		attachInterrupt(digitalPinToInterrupt(PIN_ZCD), zeroCrossDetect, FALLING);
 
 		//Beállítjuk, hogy a PRE_WELD állapotból induljunk
 		weldCurrentState = PRE_WELD;
@@ -393,7 +387,7 @@ void setup(void) {
 #ifdef SERIAL_DEBUG
 	Serial.begin(9600);
 	while (!Serial)
-		;
+	;
 	Serial.println("Debug active");
 #endif
 
@@ -402,9 +396,10 @@ void setup(void) {
 	pConfig->read();
 
 	//Rotary encoder init
-	pRotaryEncoder = new RotaryEncoderWrapper(PIN_ENCODER_CLK, PIN_ENCODER_DT,
-	PIN_ENCODER_SW);
+	pRotaryEncoder = new RotaryEncoderWrapper(PIN_ENCODER_CLK, PIN_ENCODER_DT, PIN_ENCODER_SW);
 	pRotaryEncoder->init();
+	pRotaryEncoder->SetChanged();   // kierõszakoljuk az állapot kiolvashatóságát
+	pRotaryEncoder->readRotaryEncoder();   //elsõ kiolvasást eldobjuk
 
 	//Buzzer init
 	pBuzzer = new Buzzer();
@@ -446,15 +441,7 @@ void setup(void) {
  */
 void loop(void) {
 
-	static bool firstTime = true;	//elsõ futás jelzése
 	static byte weldButtonPrevState = LOW;   //A hegesztés gomb elõzõ állapota
-
-	//--- Indulási beállítások
-	if (firstTime) {
-		firstTime = false;
-		pRotaryEncoder->SetChanged();   // force an update on active rotary
-		pRotaryEncoder->readRotaryEncoder();   //elsõ kiolvasást eldobjuk
-	}
 
 	//
 	// --- Hegesztés kezelése -------------------------------------------------------------------
@@ -474,8 +461,8 @@ void loop(void) {
 	//
 	//--- MainDisplay kezelése --------------------------------------------------------------------
 	//
-	if(lcdMenu->menuState == LcdMenu::FORCE_MAIN_DISPLAY){
-		lcdMenu->menuState =LcdMenu::MAIN_MENU;
+	if (lcdMenu->menuState == LcdMenu::FORCE_MAIN_DISPLAY) {
+		lcdMenu->menuState = LcdMenu::MAIN_MENU;
 		menuInactiveController();
 	} else if (lcdMenu->menuState == LcdMenu::OFF) {
 		//Menü tétlenség figyelése

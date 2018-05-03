@@ -36,7 +36,7 @@ class Config {
 
 				//A logikai változókat nem lehet bitfield-be szervezni, mert a menüben nem lehet rájuk pointert húzni
 				bool pulseCountWeldMode;	//pulzusszámlálás (true) vagy kézi(false) hegesztés
-				bool blackLightState;		//háttéevilágítás
+				bool blackLightState;		//háttévilágítás
 				bool beepState;				//beep
 
 				uint8_t contrast;			//LCD kontraszt érték
@@ -61,7 +61,7 @@ class Config {
 			//Verzió info
 			memcpy(&configVars.version, NSP_VERSION, NSP_VERSION_SIZE);
 
-			//BitMap
+			//logikai változók
 			configVars.pulseCountWeldMode = DEF_PULSE_COUNT_WELD_MODE;
 			configVars.blackLightState = DEF_BACKLIGHT_STATE;
 			configVars.beepState = DEF_BEEP_STATE;
