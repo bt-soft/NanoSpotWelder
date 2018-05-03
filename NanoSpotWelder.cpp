@@ -360,7 +360,7 @@ void weldButtonPushed(void) {
 
 		//Addig amíg a gomb le van nyomva, addig nem mozdulunk innen
 		while (digitalRead(PIN_WELD_BUTTON)) {
-			delayMicroseconds(SLEEP_TIME_MICROSEC * 10);
+			delayMicroseconds(SLEEP_TIME_MICROSEC * 20);
 		}
 
 		digitalWrite(PIN_TRIAC, LOW); //TRIAC KI
