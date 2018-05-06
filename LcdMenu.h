@@ -36,7 +36,7 @@
 // pin 3 - LCD reset (RST)
 
 #define MENU_VIEWPORT_SIZE 	3			/* Menü elemekbõl ennyi látszik egyszerre */
-#define LAST_MENUITEM_NDX 	9 			/* Az utolsó menüelem indexe, 0-tól indul */
+#define LAST_MENUITEM_NDX 	8 			/* Az utolsó menüelem indexe, 0-tól indul */
 #define DEGREE_SYMBOL_CODE 	247			/* Az LCD-n a '°' jel kódja */
 
 class LcdMenu {
@@ -79,9 +79,6 @@ public:
 	MenuState_t menuState = OFF;
 	MenuItemT menuItems[LAST_MENUITEM_NDX + 1];
 
-	/**
-	 * Konstruktor
-	 */
 	LcdMenu(void);
 	void drawSplashScreen(void);
 	void resetMenu(void);

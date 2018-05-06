@@ -6,24 +6,18 @@
  */
 #include <Arduino.h>
 #include <WString.h>
-#include <OneWire.h>
-#include <DallasTemperature.h>
 
 #include "NanoSpotWederPinouts.h"
 #include "Config.h"
 #include "LcdMenu.h"
 #include "Buzzer.h"
 #include "RotaryEncoderWrapper.h"
+#include "MOTTemp.h"
+#include "Environment.h"
 
-//Serial konzol debug ON
-//#define SERIAL_DEBUG
-
-//Dallas DS18B20 hõmérõ szenzor
-#define MOT_TEMP_SENSOR_NDX 	0
-#define TEMP_DIFF_TO_DISPLAY  	0.5f	/* fél fokonkénti eltérésekkel foglalkozunk csak */
-float lastMotTemp = -1.0f;				//A MOT utolsó mért hõmérséklete
-OneWire oneWire(PIN_DALLAS18B20);
-DallasTemperature tempSensors(&oneWire);
+//MOT hõmérsékletmérés
+#define TEMP_DIFF_TO_DISPLAY  			0.5f	/* fél fokonkénti eltérésekkel foglalkozunk csak */
+MOTTemp *pMOTTemp;
 
 //--- Konfig support
 Config *pConfig;
@@ -65,6 +59,16 @@ void ventilatorController(float *currentMotTemp) {
 			digitalWrite(PIN_VENTILATOR, HIGH);
 		}
 	}
+
+#ifdef SERIAL_DEBUG
+	Serial.print("PIN_VENTILATOR: ");
+	Serial.print(digitalRead(PIN_VENTILATOR));
+
+	Serial.print(", triggerValue: ");
+	Serial.print(triggerValue);
+	Serial.print(",  currentMotTemp: ");
+	Serial.println(*currentMotTemp);
+#endif
 }
 
 /**
@@ -75,31 +79,30 @@ bool mainDisplayController(void) {
 
 	bool highTempAlarm = false;
 
-	//MOT Hõmérséklet lekérése -> csak egy DS18B20 mérõnk van -> 0 az index
-	tempSensors.requestTemperaturesByIndex(MOT_TEMP_SENSOR_NDX);
-	//MOT Hõmérséklet kiolvasása
-	float currentMotTemp = tempSensors.getTempCByIndex(MOT_TEMP_SENSOR_NDX);
-
-#ifdef SERIAL_DEBUG
-	Serial.print("MOT Temp: ");
-	Serial.println(currentMotTemp);
-#endif
+	float currentMotTemp = pMOTTemp->getTemperature();
 
 	//Magas a hõmérséklet?
 	if (currentMotTemp >= pConfig->configVars.motTempAlarm) {
-		lastMotTemp = currentMotTemp;
+		pMOTTemp->lastMotTemp = currentMotTemp;
 		lcdMenu->drawWarningDisplay(&currentMotTemp);
 		pBuzzer->buzzerAlarm();
 		highTempAlarm = true;
 
-	} else if (lastMotTemp == -1.0f || abs(lastMotTemp - currentMotTemp) > TEMP_DIFF_TO_DISPLAY) {
+	} else if (pMOTTemp->lastMotTemp == -1.0f || abs(pMOTTemp->lastMotTemp - currentMotTemp) > TEMP_DIFF_TO_DISPLAY) {
 		//Csak az elsõ és a TEMP_DIFF_TO_DISPLAY-nál nagyobb eltérésekre reagálunk
-		lastMotTemp = currentMotTemp;
+		pMOTTemp->lastMotTemp = currentMotTemp;
 		lcdMenu->drawMainDisplay(&currentMotTemp);
 	}
 
 	//Ventilátor vezérlés
 	ventilatorController(&currentMotTemp);
+
+#ifdef SERIAL_DEBUG
+	Serial.print("MOT Temp: ");
+	Serial.print(currentMotTemp);
+	Serial.print(", highTempAlarm: ");
+	Serial.println(highTempAlarm);
+#endif
 
 	return highTempAlarm;
 }
@@ -246,7 +249,7 @@ void menuInactiveController(void) {
 		case LcdMenu::MAIN_MENU:
 			lcdMenu->resetMenu(); //Kilépünk a menübõl...
 			lcdMenu->menuState = LcdMenu::OFF;
-			lastMotTemp = -1.0f; //kierõszakoljuk a main display újrarajzoltatását
+			pMOTTemp->lastMotTemp = -1.0f; //kierõszakoljuk a main display újrarajzoltatását
 			break;
 
 			//Elembeállító menüben vagyunk
@@ -404,6 +407,8 @@ void setup(void) {
 	lcdMenu = new LcdMenu();
 	lcdMenu->drawSplashScreen();
 
+	pMOTTemp = new MOTTemp();
+
 	//Weld button PIN
 	pinMode(PIN_WELD_BUTTON, INPUT);
 
@@ -421,9 +426,6 @@ void setup(void) {
 	//--- Ventilátor
 	pinMode(PIN_VENTILATOR, OUTPUT);
 	digitalWrite(PIN_VENTILATOR, LOW);
-
-	//Hõmérés init
-	tempSensors.begin();
 
 	//idõmérés indul
 	lastMiliSec = millis();

@@ -17,7 +17,7 @@
 
 
 //------------------- Hõmérés
-#define PIN_DALLAS18B20			A2
+#define PIN_TEMP_SENSOR			A2
 
 //------------------- Ventilátor
 #define PIN_VENTILATOR			A3

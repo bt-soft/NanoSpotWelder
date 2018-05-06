@@ -60,16 +60,17 @@ void LcdMenu::drawSplashScreen(void) {
  */
 void LcdMenu::initMenuItems(void) {
 
+
 	menuItems[0] = {"Weld mode", WELD, &pConfig->configVars.pulseCountWeldMode, 0, 1, NULL};
 	menuItems[1] = {"PreWeld pulse", PULSE, &pConfig->configVars.preWeldPulseCnt, 0, 255, NULL};
 	menuItems[2] = {"Pause pulse", PULSE, &pConfig->configVars.pausePulseCnt, 0, 255, NULL};
 	menuItems[3] = {"Weld pulse", PULSE, &pConfig->configVars.weldPulseCnt, 1, 255, NULL};
-	menuItems[4] = {"MOT T.Alrm", TEMP, &pConfig->configVars.motTempAlarm, 50, 90, NULL};
-	menuItems[5] = {"Contrast", BYTE, &pConfig->configVars.contrast, 0, 127, &LcdMenu::lcdContrastCallBack};
-	menuItems[6] = {"Disp light", BOOL, &pConfig->configVars.blackLightState, 0, 1, &LcdMenu::lcdBackLightCallBack};
-	menuItems[7] = {"Beep", BOOL, &pConfig->configVars.beepState, 0, 1, &LcdMenu::beepStateCallBack};
-	menuItems[8] = {"Fctry reset", FUNCT, NULL, 0, 0, &LcdMenu::factoryResetCallBack};
-	menuItems[9] = {"Exit menu", FUNCT, NULL, 0, 0, &LcdMenu::exitCallBack};
+	menuItems[4] = {"MOT T.Alrm", TEMP, &pConfig->configVars.motTempAlarm, 25, 90, NULL};
+	//menuItems[5] = {"Contrast", BYTE, &pConfig->configVars.contrast, 0, 127, &LcdMenu::lcdContrastCallBack};
+	menuItems[5] = {"Disp light", BOOL, &pConfig->configVars.blackLightState, 0, 1, &LcdMenu::lcdBackLightCallBack};
+	menuItems[6] = {"Beep", BOOL, &pConfig->configVars.beepState, 0, 1, &LcdMenu::beepStateCallBack};
+	menuItems[7] = {"Fctry reset", FUNCT, NULL, 0, 0, &LcdMenu::factoryResetCallBack};
+	menuItems[8] = {"Exit menu", FUNCT, NULL, 0, 0, &LcdMenu::exitCallBack};
 }
 
 /**
@@ -87,7 +88,7 @@ void LcdMenu::resetMenu(void) {
  */
 void LcdMenu::drawTempValue(float *pCurrentMotTemp) {
 	nokia5110Display->setTextSize(2);
-	nokia5110Display->setCursor(abs(*pCurrentMotTemp) > 99.9 ? 0 : 18, 32);
+	nokia5110Display->setCursor(abs(*pCurrentMotTemp) > 99.9 ? 0 : 10, 32);
 	dtostrf(*pCurrentMotTemp, 1, 1, tempBuff);
 	nokia5110Display->print(tempBuff);
 
