@@ -14,7 +14,7 @@
 
 #ifdef USE_DIGITAL_TEMPERATURE_SENSOR
 #include <OneWire.h>
-#define REQUIRESALARMS false			/* nem kell a DallasTemperature ALARM supportja */
+#define REQUIRESALARMS 			false	/* nem kell a DallasTemperature ALARM supportja */
 #include <DallasTemperature.h>
 #define MOT_TEMP_SENSOR_NDX 	0		/* Dallas DS18B20 hõmérõ szenzor indexe */
 #else
