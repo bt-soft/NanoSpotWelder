@@ -10,6 +10,8 @@
 #ifdef USE_DIGITAL_TEMPERATURE_SENSOR
 OneWire oneWire(PIN_TEMP_SENSOR);
 DallasTemperature tempSensors(&oneWire);
+#else
+LM335A Temp(PIN_TEMP_SENSOR);
 #endif
 
 /**
@@ -36,18 +38,8 @@ float MOTTemp::getTemperature(void) {
 	//MOT Hõmérséklet kiolvasása
 	currentMotTemp = tempSensors.getTempCByIndex(MOT_TEMP_SENSOR_NDX);
 #else
-	int adValue = analogRead(PIN_TEMP_SENSOR);
-	float millivolts = MEASURED_MILIVOLT(adValue);
-	currentMotTemp = KELVIN_TO_CELSIUS(millivolts / 10.0);
-	currentMotTemp += SOFTWARE_TEML_AJDUST;
-
-#ifdef SERIAL_DEBUG
-	Serial.print("adValue: ");
-	Serial.print(adValue);
-	Serial.print(",  millivolts: ");
-	Serial.println(millivolts);
-#endif
-
+	Temp.Read();
+	currentMotTemp = Temp.dC / 100.0f;
 #endif
 
 	return currentMotTemp;

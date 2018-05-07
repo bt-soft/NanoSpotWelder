@@ -384,7 +384,7 @@ void weldButtonPushed(void) {
  */
 void setup(void) {
 #ifdef SERIAL_DEBUG
-	Serial.begin(9600);
+	Serial.begin(SERIAL_BAUD_RATE);
 	while (!Serial)
 	;
 	Serial.println("Debug active");

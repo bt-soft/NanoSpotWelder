@@ -12,26 +12,22 @@
 #include "NanoSpotWederPinouts.h"
 #include "Environment.h"
 
-
 #ifdef USE_DIGITAL_TEMPERATURE_SENSOR
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #define MOT_TEMP_SENSOR_NDX 	0		/* Dallas DS18B20 hõmérõ szenzor indexe */
 #else
-#define MEASURED_MILIVOLT(x) (((x) / 1024.0) * REAL_5V_VCC_VALUE * 1000.0)
-#define KELVIN_TO_CELSIUS(x) ((x) - 273.15)
-
+#include <MD_LM335A.h>
 #endif
 
 class MOTTemp {
 
-public:
-	MOTTemp();
-	float getTemperature(void);
+	public:
+		MOTTemp();
+		float getTemperature(void);
 
-
-public:
-	float lastMotTemp = -1.0f;				//A MOT utolsó mért hõmérséklete
+	public:
+		float lastMotTemp = -1.0f;				//A MOT utolsó mért hõmérséklete
 
 };
 
