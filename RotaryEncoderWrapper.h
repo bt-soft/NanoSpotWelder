@@ -69,9 +69,9 @@ public:
 	 */
 	void init() {
 		//--- Rotary Encoder felhúzása
-		// Intervallum: -50...+50
-		// Lépés: 2
 		// Kezdeti érték: 0
+		// Intervallum: -255...+255
+		// Lépés: 1
 		// Túlhajtás: igen
 		ky040::AddRotaryCounter(ROTARY_ID1, 0, -255, 255, 1, true /*rollOver*/);
 		ky040::SetRotary(ROTARY_ID1);
