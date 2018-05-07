@@ -42,15 +42,15 @@
 class LcdMenu {
 
 private:
-	char 						tempBuff[32];
-	Nokia5110DisplayWrapper 	*nokia5110Display;
+	char tempBuff[32];
+	Nokia5110DisplayWrapper *nokia5110Display;
 
 	typedef struct MenuViewport_t {
 		byte firstItem;
 		byte lastItem;
 		byte selectedItem;
 	} MenuViewPortT;
-	MenuViewPortT 				menuViewport;
+	MenuViewPortT menuViewport;
 
 public:
 	typedef enum MenuState_t {
@@ -74,7 +74,6 @@ public:
 		byte maxValue;				// Maximális numerikus érték
 		voidFuncPtr callbackFunct; 	// Egyéb mûveletek függvény pointere, vagy NULL, ha nincs
 	} MenuItemT;
-
 
 	MenuState_t menuState = OFF;
 	MenuItemT menuItems[LAST_MENUITEM_NDX + 1];

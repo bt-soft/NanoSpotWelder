@@ -1,4 +1,3 @@
-
 /*
  * ky-040.h
  * 
@@ -42,30 +41,26 @@
  */
 //#define	SMALLEST_CODESIZE
 
-
 typedef struct encoderP {
 	uint8_t id;
 	int16_t currentVal;
 	int16_t minVal;
 	int16_t maxVal;
-	int16_t inc;
-	bool rollOver, changed;
+	int16_t inc;bool rollOver, changed;
 } encoderParams;
-	
+
 class ky040 {
 
 public:
-	
-	ky040 ( uint8_t interruptClkPin, uint8_t dtPin, uint8_t switchPin,
-			uint8_t maxRotarys = 1 );
+
+	ky040(uint8_t interruptClkPin, uint8_t dtPin, uint8_t switchPin, uint8_t maxRotarys = 1);
 
 #if !defined ( SMALLEST_CODESIZE )
-	bool AddRotaryCounter(uint8_t id, int16_t currentVal, int16_t minVal,
-			int16_t maxVal, int16_t inc = 1, bool rollOver = true);
+	bool AddRotaryCounter(uint8_t id, int16_t currentVal, int16_t minVal, int16_t maxVal, int16_t inc = 1, bool rollOver = true);
 
-	bool AddRotaryCounter(uint8_t id, int16_t maxVal, bool rollOver = false );
+	bool AddRotaryCounter(uint8_t id, int16_t maxVal, bool rollOver = false);
 
-	bool SetRotary ( uint8_t id );
+	bool SetRotary(uint8_t id);
 #else // Minimize code size - remove most sanity / error checking
 	void AddRotaryCounter(uint8_t id, int16_t currentVal, int16_t minVal,
 			int16_t maxVal, int16_t inc = 1, bool rollOver = true);
@@ -75,43 +70,41 @@ public:
 	void SetRotary ( uint8_t id );
 #endif
 
-	bool HasRotaryValueChanged ( uint8_t id = CURRENT_ID );
+	bool HasRotaryValueChanged(uint8_t id = CURRENT_ID);
 
-	void SetChanged ( uint8_t id = CURRENT_ID );
-	
-	int16_t GetRotaryValue ( uint8_t id = CURRENT_ID );
+	void SetChanged(uint8_t id = CURRENT_ID);
 
-	void SetMaxValueOnRotary ( int16_t maxVal, uint8_t id = CURRENT_ID );
+	int16_t GetRotaryValue(uint8_t id = CURRENT_ID);
 
-	bool IsActive ( uint8_t id );
+	void SetMaxValueOnRotary(int16_t maxVal, uint8_t id = CURRENT_ID);
 
-	bool SwitchPressed ( void );
+	bool IsActive(uint8_t id);
+
+	bool SwitchPressed(void);
 
 private:
-	
-	uint8_t	maxRotaries = 0,	// maximum allowed rotaries
+
+	uint8_t maxRotaries = 0,	// maximum allowed rotaries
 			numRotaries = 0,	// how many have been added
 			clkPin,				// pin definitions for the encoder
-			dtPin,
-			swPin,
-			currentID;			// which rotary is active
-		
+			dtPin, swPin, currentID;			// which rotary is active
+
 	encoderParams *params;
 	volatile encoderParams *currentRotaryParams;
 #if !defined ( SMALLEST_CODESIZE )
-	bool GetParamsFromID ( uint8_t id );
+	bool GetParamsFromID(uint8_t id);
 #else
 	void GetParamsFromID ( uint8_t id );
 #endif
 
 	static volatile encoderParams * params_2, *params_3;
 	static uint8_t dtPin_2, dtPin_3;
-	static void RotaryClkInterruptOn_2 ( void );
-	static void RotaryClkInterruptOn_3 ( void );
-	
+	static void RotaryClkInterruptOn_2(void);
+	static void RotaryClkInterruptOn_3(void);
+
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
 	static volatile encoderParams *params_18, *params_19, *params_20,
-								  *params_21;
+	*params_21;
 	static uint8_t dtPin_18, dtPin_19, dtPin_20, dtPin_21;
 	static void RotaryClkInterruptOn_18 ( void );
 	static void RotaryClkInterruptOn_19 ( void );
@@ -127,7 +120,7 @@ private:
 	static void RotaryClkInterruptOn_7 ( void );
 #endif
 
-	static void UpdateRotaryCount ( uint8_t pin, volatile encoderParams * params );
+	static void UpdateRotaryCount(uint8_t pin, volatile encoderParams * params);
 };
 
 #endif // ifndef __KY040__

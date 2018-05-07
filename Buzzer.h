@@ -15,51 +15,48 @@
 
 class Buzzer {
 
-	public:
-		/**
-		 * Sipolás - Ha engedélyezve van
-		 */
-		void buzzer(void) {
+public:
+	/**
+	 * Sipolás - Ha engedélyezve van
+	 */
+	void buzzer(void) {
 
-			if (!pConfig->configVars.beepState) {
-				return;
-			}
-
-			tone(PIN_BUZZER, 1000);
-			delay(500);
-			tone(PIN_BUZZER, 800);
-			delay(500);
-			noTone(PIN_BUZZER);
+		if (!pConfig->configVars.beepState) {
+			return;
 		}
 
+		tone(PIN_BUZZER, 1000);
+		delay(500);
+		tone(PIN_BUZZER, 800);
+		delay(500);
+		noTone(PIN_BUZZER);
+	}
 
-		/**
-		 * Riasztási hang
-		 */
-		void buzzerAlarm(void) {
-			tone(PIN_BUZZER, 1000);
-			delay(300);
-			tone(PIN_BUZZER, 1000);
-			delay(300);
-			tone(PIN_BUZZER, 1000);
-			delay(300);
-			noTone(PIN_BUZZER);
+	/**
+	 * Riasztási hang
+	 */
+	void buzzerAlarm(void) {
+		tone(PIN_BUZZER, 1000);
+		delay(300);
+		tone(PIN_BUZZER, 1000);
+		delay(300);
+		tone(PIN_BUZZER, 1000);
+		delay(300);
+		noTone(PIN_BUZZER);
+	}
+
+	/**
+	 * menu hang
+	 */
+	void buzzerMenu() {
+		if (!pConfig->configVars.beepState) {
+			return;
 		}
 
-		/**
-		 * menu hang
-		 */
-		void buzzerMenu() {
-			if (!pConfig->configVars.beepState) {
-				return;
-			}
-
-			tone(PIN_BUZZER, 500);
-			delay(15);
-			noTone(PIN_BUZZER);
-		}
-
-
+		tone(PIN_BUZZER, 500);
+		delay(15);
+		noTone(PIN_BUZZER);
+	}
 
 };
 

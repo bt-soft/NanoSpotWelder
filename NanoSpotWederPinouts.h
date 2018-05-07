@@ -15,14 +15,11 @@
 #define PIN_ENCODER_DT         	A0      /* data pin */
 #define PIN_ENCODER_SW         	A1      /* switch pin (active LOW) */
 
-
 //------------------- Hõmérés
 #define PIN_TEMP_SENSOR			A2
 
 //------------------- Ventilátor
 #define PIN_VENTILATOR			A3
-
-
 
 //------------------- LCD Display
 #define PIN_LCD_BLACKLIGHT 		9
@@ -40,7 +37,5 @@
 
 //------------------- Beeper
 #define PIN_BUZZER 				13
-
-
 
 #endif /* NANOSPOTWEDERPINOUTS_H_ */

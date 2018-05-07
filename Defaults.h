@@ -20,8 +20,6 @@
 
 #define DEF_MOT_TEMP_ALARM 				70 		/* MOT hõmérséklet riasztás bekapcsolási határ °C-ban */
 
-
 #define SYSTEM_FREQUENCY				50.0	/* A ~230V-os hálózat frekvenciája Hz-ben */
-
 
 #endif /* DEFAULTS_H_ */

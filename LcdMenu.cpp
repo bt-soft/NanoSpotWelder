@@ -13,14 +13,12 @@
  */
 LcdMenu::LcdMenu(void) {
 
-	//háttérvilágítás PIN beállítása
-
-	//Software SPI (slower updates, more flexible pin options):
-	nokia5110Display = new Nokia5110DisplayWrapper(PIN_LCD_SCLK, PIN_LCD_DIN, PIN_LCD_DC, PIN_LCD_CS, PIN_LCD_RST, PIN_LCD_BLACKLIGHT);
-
+	//Software SPI
+	nokia5110Display = new Nokia5110DisplayWrapper(PIN_LCD_SCLK, PIN_LCD_DIN, PIN_LCD_DC, PIN_LCD_CS, PIN_LCD_RST,
+	PIN_LCD_BLACKLIGHT);
 
 	//--- Display
-	nokia5110Display->setBlackLightState(pConfig->configVars.blackLightState);//háttérvilágítás beállítása a konfig szerint
+	nokia5110Display->setBlackLightState(pConfig->configVars.blackLightState); //háttérvilágítás beállítása a konfig szerint
 	nokia5110Display->setContrast(pConfig->configVars.contrast);	//kontraszt beállítása
 
 	//Menüelemek inicializálása
@@ -60,12 +58,11 @@ void LcdMenu::drawSplashScreen(void) {
  */
 void LcdMenu::initMenuItems(void) {
 
-
 	menuItems[0] = {"Weld mode", WELD, &pConfig->configVars.pulseCountWeldMode, 0, 1, NULL};
 	menuItems[1] = {"PreWeld pulse", PULSE, &pConfig->configVars.preWeldPulseCnt, 0, 255, NULL};
 	menuItems[2] = {"Pause pulse", PULSE, &pConfig->configVars.pausePulseCnt, 0, 255, NULL};
 	menuItems[3] = {"Weld pulse", PULSE, &pConfig->configVars.weldPulseCnt, 1, 255, NULL};
-	menuItems[4] = {"MOT T.Alrm", TEMP, &pConfig->configVars.motTempAlarm, 25, 90, NULL};
+	menuItems[4] = {"MOT T.Alrm", TEMP, &pConfig->configVars.motTempAlarm, 50, 90, NULL};
 	//menuItems[5] = {"Contrast", BYTE, &pConfig->configVars.contrast, 0, 127, &LcdMenu::lcdContrastCallBack};
 	menuItems[5] = {"Disp light", BOOL, &pConfig->configVars.blackLightState, 0, 1, &LcdMenu::lcdBackLightCallBack};
 	menuItems[6] = {"Beep", BOOL, &pConfig->configVars.beepState, 0, 1, &LcdMenu::beepStateCallBack};
@@ -110,8 +107,7 @@ void LcdMenu::drawMainDisplay(float *pCurrentMotTemp) {
 	//Pulzusszámláló mód
 	if (pConfig->configVars.pulseCountWeldMode) {
 		nokia5110Display->println("Pwld  Paus Wld");
-		sprintf(tempBuff, "%-3d   %-3d  %-3d", pConfig->configVars.preWeldPulseCnt, pConfig->configVars.pausePulseCnt,
-				pConfig->configVars.weldPulseCnt);
+		sprintf(tempBuff, "%-3d   %-3d  %-3d", pConfig->configVars.preWeldPulseCnt, pConfig->configVars.pausePulseCnt, pConfig->configVars.weldPulseCnt);
 		nokia5110Display->println(tempBuff);
 	} else { //kézi hegesztés
 		nokia5110Display->setTextColor(WHITE, BLACK);
