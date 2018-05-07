@@ -6,7 +6,6 @@
  */
 
 #include "MOTTemp.h"
-#include "Environment.h"
 
 #ifdef USE_DIGITAL_TEMPERATURE_SENSOR
 OneWire oneWire(PIN_TEMP_SENSOR);
@@ -42,12 +41,12 @@ float MOTTemp::getTemperature(void) {
 	currentMotTemp = KELVIN_TO_CELSIUS(millivolts / 10.0);
 	currentMotTemp += SOFTWARE_TEML_AJDUST;
 
-//#ifdef SERIAL_DEBUG
-//	Serial.print("adValue: ");
-//	Serial.print(adValue);
-//	Serial.print(",  millivolts: ");
-//	Serial.println(millivolts);
-//#endif
+#ifdef SERIAL_DEBUG
+	Serial.print("adValue: ");
+	Serial.print(adValue);
+	Serial.print(",  millivolts: ");
+	Serial.println(millivolts);
+#endif
 
 #endif
 

@@ -10,6 +10,7 @@
 
 #include <Arduino.h>
 #include "NanoSpotWederPinouts.h"
+#include "Environment.h"
 
 
 #ifdef USE_DIGITAL_TEMPERATURE_SENSOR
