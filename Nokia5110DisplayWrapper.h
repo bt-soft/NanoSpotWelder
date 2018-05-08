@@ -27,6 +27,8 @@ public:
 			this->blackLightPin = blackLightPin;
 			pinMode(blackLightPin, OUTPUT);
 		}
+
+		//Felhúzzuk az LCD-t a konfigban megadott értékekkel
 		begin(pConfig->configVars.contrast /* Constrast:0..127 */, pConfig->configVars.bias /* Bias:0...7 */);
 	}
 

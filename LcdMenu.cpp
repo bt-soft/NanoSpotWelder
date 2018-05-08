@@ -23,9 +23,8 @@ LcdMenu::LcdMenu(void) {
 
 	nokia5110Display = new Nokia5110DisplayWrapper(PIN_LCD_SCLK, PIN_LCD_DIN, PIN_LCD_DC, PIN_LCD_CS, PIN_LCD_RST, PIN_LCD_BLACKLIGHT);
 
-	//--- Display
+	//--- Háttérvilágítás kezelése
 	nokia5110Display->setBlackLightState(pConfig->configVars.blackLightState); //háttérvilágítás beállítása a konfig szerint
-	nokia5110Display->setContrast(pConfig->configVars.contrast);	//kontraszt beállítása
 
 	//Menüelemek inicializálása
 	initMenuItems();
