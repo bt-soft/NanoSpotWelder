@@ -9,6 +9,8 @@
 #define DEFAULTS_H_
 
 #define DEF_CONTRAST					40 		/* LCD kontraszt */
+#define DEF_BIAS						4 		/* LCD elõfeszítés */
+
 #define DEF_PULSE_COUNT_WELD_MODE		true	/* pulzusszámlálásos hegesztési mód */
 #define DEF_BEEP_STATE					true  	/* Beep */
 #define DEF_BACKLIGHT_STATE				false 	/* LCD háttérvilágítás */

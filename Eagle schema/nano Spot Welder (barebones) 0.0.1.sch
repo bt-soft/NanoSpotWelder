@@ -30659,11 +30659,9 @@ CONN_03x2
 <part name="C4" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="C-EU" device="025-024X044" package3d_urn="urn:adsk.eagle:package:23630/1" value="100n"/>
 <part name="GND15" library="SparkFun-PowerSymbols" library_urn="urn:adsk.eagle:library:530" deviceset="GND" device=""/>
 <part name="R6" library="resistor" library_urn="urn:adsk.eagle:library:348" deviceset="R-EU_" device="0204/7" package3d_urn="urn:adsk.eagle:package:25945/1" value="1k"/>
-<part name="P+5" library="audio amplifier example" library_urn="urn:adsk.eagle:library:970892" deviceset="VCC" device="" value="+5V"/>
 <part name="IC1" library="linear" library_urn="urn:adsk.eagle:library:262" deviceset="78*" device="T" package3d_urn="urn:adsk.eagle:package:16414/1" technology="05"/>
 <part name="IC2" library="linear" library_urn="urn:adsk.eagle:library:262" deviceset="78*" device="L" package3d_urn="urn:adsk.eagle:package:16416/2" technology="05" value="78L33"/>
 <part name="J1" library="SparkFun-Connectors" library_urn="urn:adsk.eagle:library:513" deviceset="CONN_03X2" device="SHROUD" package3d_urn="urn:adsk.eagle:package:38264/1" value="AVR ISP CONN"/>
-<part name="P+8" library="audio amplifier example" library_urn="urn:adsk.eagle:library:970892" deviceset="VCC" device="" value="+5V"/>
 <part name="GND5" library="SparkFun-PowerSymbols" library_urn="urn:adsk.eagle:library:530" deviceset="GND" device=""/>
 <part name="P+9" library="audio amplifier example" library_urn="urn:adsk.eagle:library:970892" deviceset="VCC" device="" value="+5V"/>
 <part name="GND16" library="SparkFun-PowerSymbols" library_urn="urn:adsk.eagle:library:530" deviceset="GND" device=""/>
@@ -30678,6 +30676,8 @@ CONN_03x2
 <part name="P+12" library="audio amplifier example" library_urn="urn:adsk.eagle:library:970892" deviceset="VCC" device="" value="+12V"/>
 <part name="R5" library="resistor" library_urn="urn:adsk.eagle:library:348" deviceset="R-EU_" device="0204/7" package3d_urn="urn:adsk.eagle:package:25945/1" value="4k7"/>
 <part name="~TÁP" library="con-ptr500" library_urn="urn:adsk.eagle:library:181" deviceset="AK300/2" device="" package3d_urn="urn:adsk.eagle:package:9881/1" value="~9V"/>
+<part name="D3" library="diode" library_urn="urn:adsk.eagle:library:210" deviceset="1N4148" device="DO35-10" package3d_urn="urn:adsk.eagle:package:43344/2" value="1N4148"/>
+<part name="P+5" library="audio amplifier example" library_urn="urn:adsk.eagle:library:970892" deviceset="VCC" device="" value="+5V"/>
 </parts>
 <sheets>
 <sheet>
@@ -30695,6 +30695,8 @@ CONN_03x2
 <text x="25.4" y="124.46" size="1.778" layer="91">MISO</text>
 <text x="25.4" y="121.92" size="1.778" layer="91">SCK</text>
 <text x="25.4" y="119.38" size="1.778" layer="91">RST</text>
+<text x="-73.66" y="132.08" size="1.778" layer="91" rot="R90">
+ISP protection </text>
 </plain>
 <instances>
 <instance part="OK2" gate="G$1" x="-50.8" y="-38.1" smashed="yes">
@@ -30869,14 +30871,12 @@ CONN_03x2
 <attribute name="NAME" x="-49.3014" y="140.97" size="1.778" layer="95" rot="R270"/>
 <attribute name="VALUE" x="-54.102" y="140.97" size="1.778" layer="96" rot="R270"/>
 </instance>
-<instance part="P+5" gate="VCC" x="-60.96" y="147.32"/>
 <instance part="IC1" gate="A1" x="-152.4" y="12.7"/>
 <instance part="IC2" gate="A1" x="-121.92" y="12.7"/>
 <instance part="J1" gate="G$1" x="45.72" y="121.92" smashed="yes">
 <attribute name="NAME" x="42.164" y="127.508" size="1.778" layer="95" font="vector"/>
 <attribute name="VALUE" x="37.338" y="113.538" size="1.778" layer="96" font="vector" align="top-left"/>
 </instance>
-<instance part="P+8" gate="VCC" x="55.88" y="132.08"/>
 <instance part="GND5" gate="1" x="55.88" y="109.22"/>
 <instance part="P+9" gate="VCC" x="-50.8" y="147.32"/>
 <instance part="GND16" gate="1" x="-121.92" y="-2.54"/>
@@ -30910,6 +30910,11 @@ CONN_03x2
 <attribute name="NAME" x="-161.29" y="67.691" size="1.778" layer="95" rot="MR0"/>
 <attribute name="VALUE" x="-156.21" y="72.263" size="1.778" layer="96" rot="MR180"/>
 </instance>
+<instance part="D3" gate="G$1" x="-66.04" y="137.16" smashed="yes" rot="R270">
+<attribute name="NAME" x="-63.0174" y="137.16" size="1.778" layer="95" rot="R270"/>
+<attribute name="VALUE" x="-70.8914" y="139.7" size="1.778" layer="96" rot="R270"/>
+</instance>
+<instance part="P+5" gate="VCC" x="-66.04" y="147.32"/>
 </instances>
 <busses>
 </busses>
@@ -31195,23 +31200,6 @@ CONN_03x2
 <wire x1="-76.2" y1="40.64" x2="-81.28" y2="40.64" width="0.1524" layer="91"/>
 </segment>
 <segment>
-<pinref part="J1" gate="G$1" pin="2"/>
-<wire x1="53.34" y1="124.46" x2="55.88" y2="124.46" width="0.1524" layer="91"/>
-<pinref part="P+8" gate="VCC" pin="VCC"/>
-<wire x1="55.88" y1="124.46" x2="55.88" y2="129.54" width="0.1524" layer="91"/>
-</segment>
-<segment>
-<pinref part="U4" gate="G$1" pin="VCC"/>
-<wire x1="-53.34" y1="121.92" x2="-48.26" y2="121.92" width="0.1524" layer="91"/>
-<pinref part="U4" gate="G$1" pin="AVCC"/>
-<wire x1="-48.26" y1="124.46" x2="-53.34" y2="124.46" width="0.1524" layer="91"/>
-<wire x1="-53.34" y1="124.46" x2="-53.34" y2="121.92" width="0.1524" layer="91"/>
-<wire x1="-53.34" y1="124.46" x2="-60.96" y2="124.46" width="0.1524" layer="91"/>
-<junction x="-53.34" y="124.46"/>
-<pinref part="P+5" gate="VCC" pin="VCC"/>
-<wire x1="-60.96" y1="124.46" x2="-60.96" y2="144.78" width="0.1524" layer="91"/>
-</segment>
-<segment>
 <pinref part="R6" gate="G$1" pin="1"/>
 <pinref part="P+9" gate="VCC" pin="VCC"/>
 <wire x1="-50.8" y1="142.24" x2="-50.8" y2="144.78" width="0.1524" layer="91"/>
@@ -31243,6 +31231,11 @@ CONN_03x2
 <pinref part="P+12" gate="VCC" pin="VCC"/>
 <wire x1="-162.56" y1="12.7" x2="-165.1" y2="12.7" width="0.1524" layer="91"/>
 <wire x1="-165.1" y1="12.7" x2="-165.1" y2="27.94" width="0.1524" layer="91"/>
+</segment>
+<segment>
+<pinref part="D3" gate="G$1" pin="A"/>
+<pinref part="P+5" gate="VCC" pin="VCC"/>
+<wire x1="-66.04" y1="139.7" x2="-66.04" y2="144.78" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="A2" class="0">
@@ -31619,12 +31612,38 @@ CONN_03x2
 <pinref part="D2" gate="G$1" pin="A"/>
 </segment>
 </net>
+<net name="+5V_ISP" class="0">
+<segment>
+<pinref part="U4" gate="G$1" pin="VCC"/>
+<wire x1="-53.34" y1="121.92" x2="-48.26" y2="121.92" width="0.1524" layer="91"/>
+<pinref part="U4" gate="G$1" pin="AVCC"/>
+<wire x1="-48.26" y1="124.46" x2="-53.34" y2="124.46" width="0.1524" layer="91"/>
+<wire x1="-53.34" y1="124.46" x2="-53.34" y2="121.92" width="0.1524" layer="91"/>
+<wire x1="-53.34" y1="124.46" x2="-66.04" y2="124.46" width="0.1524" layer="91"/>
+<junction x="-53.34" y="124.46"/>
+<pinref part="D3" gate="G$1" pin="C"/>
+<wire x1="-66.04" y1="124.46" x2="-66.04" y2="134.62" width="0.1524" layer="91"/>
+<wire x1="-66.04" y1="124.46" x2="-73.66" y2="124.46" width="0.1524" layer="91"/>
+<junction x="-66.04" y="124.46"/>
+<label x="-76.2" y="124.46" size="1.778" layer="95"/>
+</segment>
+<segment>
+<pinref part="J1" gate="G$1" pin="2"/>
+<wire x1="53.34" y1="124.46" x2="55.88" y2="124.46" width="0.1524" layer="91"/>
+<wire x1="55.88" y1="124.46" x2="55.88" y2="129.54" width="0.1524" layer="91"/>
+<label x="55.88" y="129.54" size="1.778" layer="95"/>
+</segment>
+</net>
 </nets>
 </sheet>
 </sheets>
 </schematic>
 </drawing>
 <compatibility>
+<note version="6.3" minversion="6.2.2" severity="warning">
+Since Version 6.2.2 text objects can contain more than one line,
+which will not be processed correctly with this version.
+</note>
 <note version="8.2" severity="warning">
 Since Version 8.2, EAGLE supports online libraries. The ids
 of those online libraries will not be understood (or retained)

@@ -10,8 +10,7 @@
 
 #include <Adafruit_GFX.h>
 #include <Adafruit_PCD8544.h>
-
-#define INVERSE_5110_BACKLIGHT_STATE	true 	/* Egyes Nokia 5110 LCD-k háttérvilágítása földre aktívak, ekkor true legyen */
+#include "Config.h"
 
 class Nokia5110DisplayWrapper: public Adafruit_PCD8544 {
 
@@ -28,8 +27,7 @@ public:
 			this->blackLightPin = blackLightPin;
 			pinMode(blackLightPin, OUTPUT);
 		}
-		//begin(80 /* Constrast:0..127 */, 0x07 /* Bias:0...7 */);
-		begin();
+		begin(pConfig->configVars.contrast /* Constrast:0..127 */, pConfig->configVars.bias /* Bias:0...7 */);
 	}
 
 	virtual ~Nokia5110DisplayWrapper() {
@@ -46,7 +44,7 @@ public:
 	}
 
 	/**
-	 * Kontraszt beállítása
+	 * LCD Kontraszt beállítása
 	 * @Override
 	 */
 	void setContrast(byte contrast) {
@@ -55,15 +53,25 @@ public:
 	}
 
 	/**
+	 * LCD Elõfeszítés beállítása
+	 */
+	void setBias(byte bias) {
+		if (bias > 7) {
+			bias = 7;
+		}
+		command(PCD8544_FUNCTIONSET | PCD8544_EXTENDEDINSTRUCTION);
+		command(PCD8544_SETBIAS | bias);
+		command(PCD8544_FUNCTIONSET);
+		display();
+
+	}
+
+	/**
 	 * Háttérvilágítás állítása
 	 */
 	void setBlackLightState(bool state) {
 		if (blackLightPin != -1) {
-			digitalWrite(blackLightPin,
-#ifdef INVERSE_5110_BACKLIGHT_STATE && if(INVERSE_5110_BACKLIGHT_STATE == true)	//Egyes Nokia 5110 LCD-k háttérvilágítása földre aktívak -> negáljuk a 'state'-t
-					!
-#endif
-					state ? HIGH : LOW);  //A Nokia 5110 LCD földre világít!!
+			digitalWrite(blackLightPin, !state ? HIGH : LOW);  //A Nokia 5110 LCD LOW-ra világít
 		}
 	}
 

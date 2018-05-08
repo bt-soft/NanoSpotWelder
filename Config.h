@@ -40,6 +40,7 @@ public:
 		bool beepState;				//beep
 
 		byte contrast;				//LCD kontraszt érték
+		byte bias;					//LCD elõfeszítés érték
 		uint8_t preWeldPulseCnt;	//elõhegesztés impulzus szám
 		uint8_t pausePulseCnt;		//szünet impulzus szám
 		uint8_t weldPulseCnt;		//hegesztés impulzus szám
@@ -68,6 +69,7 @@ public:
 
 		//LCD
 		configVars.contrast = DEF_CONTRAST;
+		configVars.bias = DEF_BIAS;
 
 		//Weld
 		configVars.preWeldPulseCnt = DEF_PREWELD_PULSE_CNT;

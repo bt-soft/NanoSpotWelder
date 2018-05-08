@@ -12,31 +12,9 @@
 #include "Config.h"
 #include "Nokia5110DisplayWrapper.h"
 
-// https://github.com/adafruit/Adafruit-PCD8544-Nokia-5110-LCD-library/blob/master/examples/pcdtest/pcdtest.ino
-//  Hardware SPI (faster, but must use certain hardware pins):
-//
-//   Arduino pin          Nokia 5110 PCD8544 LCD
-//   ----------------------------------------------------
-//    -                   8 GND
-//    pin10 (D7)          7 BL - 3.3V BlackLight
-//    -                   6 Vcc - 3.3V
-//    pin16 (D13/SCK)     5 CLK - Serial clock (SCLK)
-//    pin14 (D11/MOSI)    4 DIN - Serial data input DIN (SDIN)
-//    pin8  (D5)          3 DC - Data/Command select (D/C)
-//    pin7  (D4)          2 CE - Chip select (CS, SCE#)
-//    pin6  (D3)          1 RST - Reset (RST, RES#)
-//
-//Adafruit_PCD8544 pcd8544Display = Adafruit_PCD8544(5, 4, 3); //Hardware SPI (faster, but must use certain hardware pins):
-//
-// Software SPI (slower updates, more flexible pin options):
-// pin 7 - Serial clock out (SCLK)
-// pin 6 - Serial data out (DIN)
-// pin 5 - Data/Command select (D/C)
-// pin 4 - LCD chip select (CS)
-// pin 3 - LCD reset (RST)
 
 #define MENU_VIEWPORT_SIZE 	3			/* Menü elemekbõl ennyi látszik egyszerre */
-#define LAST_MENUITEM_NDX 	8 			/* Az utolsó menüelem indexe, 0-tól indul */
+#define LAST_MENUITEM_NDX 	9 			/* Az utolsó menüelem indexe, 0-tól indul */
 #define DEGREE_SYMBOL_CODE 	247			/* Az LCD-n a '°' jel kódja */
 
 class LcdMenu {
@@ -102,6 +80,7 @@ public:
 private:
 	void initMenuItems(void);
 	void lcdContrastCallBack(void);
+	void lcdBiasCallBack(void);
 	void lcdBackLightCallBack(void);
 	void beepStateCallBack(void);
 	void factoryResetCallBack(void);

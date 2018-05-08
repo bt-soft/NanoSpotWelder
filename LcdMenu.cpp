@@ -14,8 +14,14 @@
 LcdMenu::LcdMenu(void) {
 
 	//Software SPI
-	nokia5110Display = new Nokia5110DisplayWrapper(PIN_LCD_SCLK, PIN_LCD_DIN, PIN_LCD_DC, PIN_LCD_CS, PIN_LCD_RST,
-	PIN_LCD_BLACKLIGHT);
+	// D9 - BackLight LED
+	// D8 - Serial clock out (SCLK)
+	// D7 - Serial data out (DIN)
+	// D6 - Data/Command select (D/C)
+	// D5 - LCD chip select (CS)
+	// D4 - LCD reset (RST)
+
+	nokia5110Display = new Nokia5110DisplayWrapper(PIN_LCD_SCLK, PIN_LCD_DIN, PIN_LCD_DC, PIN_LCD_CS, PIN_LCD_RST, PIN_LCD_BLACKLIGHT);
 
 	//--- Display
 	nokia5110Display->setBlackLightState(pConfig->configVars.blackLightState); //háttérvilágítás beállítása a konfig szerint
@@ -30,7 +36,6 @@ LcdMenu::LcdMenu(void) {
  * Splash képernyõ kirajzolása
  */
 void LcdMenu::drawSplashScreen(void) {
-	nokia5110Display->begin();
 	nokia5110Display->clearDisplay();
 	nokia5110Display->setTextSize(1);
 	nokia5110Display->setTextColor(BLACK);
@@ -63,11 +68,12 @@ void LcdMenu::initMenuItems(void) {
 	menuItems[2] = {"Pause pulse", PULSE, &pConfig->configVars.pausePulseCnt, 0, 255, NULL};
 	menuItems[3] = {"Weld pulse", PULSE, &pConfig->configVars.weldPulseCnt, 1, 255, NULL};
 	menuItems[4] = {"MOT T.Alrm", TEMP, &pConfig->configVars.motTempAlarm, 50, 90, NULL};
-	//menuItems[5] = {"Contrast", BYTE, &pConfig->configVars.contrast, 0, 127, &LcdMenu::lcdContrastCallBack};
-	menuItems[5] = {"Disp light", BOOL, &pConfig->configVars.blackLightState, 0, 1, &LcdMenu::lcdBackLightCallBack};
-	menuItems[6] = {"Beep", BOOL, &pConfig->configVars.beepState, 0, 1, &LcdMenu::beepStateCallBack};
-	menuItems[7] = {"Fctry reset", FUNCT, NULL, 0, 0, &LcdMenu::factoryResetCallBack};
-	menuItems[8] = {"Exit menu", FUNCT, NULL, 0, 0, &LcdMenu::exitCallBack};
+	menuItems[5] = {"LCD contrast", BYTE, &pConfig->configVars.contrast, 0, 127, &LcdMenu::lcdContrastCallBack};
+	//menuItems[6] = {"LCD bias", BYTE, &pConfig->configVars.bias, 0, 7, &LcdMenu::lcdBiasCallBack};
+	menuItems[6] = {"LCD light", BOOL, &pConfig->configVars.blackLightState, 0, 1, &LcdMenu::lcdBackLightCallBack};
+	menuItems[7] = {"Beep", BOOL, &pConfig->configVars.beepState, 0, 1, &LcdMenu::beepStateCallBack};
+	menuItems[8] = {"Fctry reset", FUNCT, NULL, 0, 0, &LcdMenu::factoryResetCallBack};
+	menuItems[9] = {"Exit menu", FUNCT, NULL, 0, 0, &LcdMenu::exitCallBack};
 }
 
 /**
@@ -357,7 +363,7 @@ void LcdMenu::invokeMenuItemCallBackFunct(void) {
 
 //------------------------------------------------------------------- Menüelemek callback függvényei
 /**
- * Kontraszt kezelése
+ * LCD Kontraszt kezelése
  */
 void LcdMenu::lcdContrastCallBack(void) {
 	nokia5110Display->setContrast(pConfig->configVars.contrast);
@@ -365,7 +371,15 @@ void LcdMenu::lcdContrastCallBack(void) {
 }
 
 /**
- * Háttérvilágítás kezelése
+ * LCD Elõfeszítés kezelése
+ */
+void LcdMenu::lcdBiasCallBack(void) {
+	nokia5110Display->setBias(pConfig->configVars.bias);
+	pConfig->wantSaveConfig = true;
+}
+
+/**
+ * LCD Háttérvilágítás kezelése
  */
 void LcdMenu::lcdBackLightCallBack(void) {
 	nokia5110Display->setBlackLightState(pConfig->configVars.blackLightState);
@@ -421,7 +435,7 @@ void LcdMenu::exitCallBack(void) {
 	nokia5110Display->setTextColor(BLACK, WHITE);
 	nokia5110Display->setTextSize(1);
 	nokia5110Display->setCursor(0, 20);
-	nokia5110Display->print("Exit from menu");
+	nokia5110Display->print("Return...");
 	nokia5110Display->display();
 
 	//menü alapállapotba
