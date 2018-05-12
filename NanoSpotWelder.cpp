@@ -452,6 +452,7 @@ void loop(void) {
 	if (weldButtonCurrentState != weldButtonPrevState && weldButtonCurrentState == HIGH && weldButtonPrevState == LOW) {
 		weldButtonPushed();
 		lcdMenu->menuState = LcdMenu::OFF; //kilépünk majd a menübõl, ha épp benne voltunk
+		delay(100); //weld button debounce -> rövid impulzus csomagok esetén jól jöhet
 	}
 	//Eltesszük az aktuális button állapotot
 	weldButtonPrevState = weldButtonCurrentState;
