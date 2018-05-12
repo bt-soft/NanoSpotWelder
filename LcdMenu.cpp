@@ -251,7 +251,7 @@ void LcdMenu::drawMenuItemValue() {
 		case PULSE: //msec kiírás
 			if (pConfig->spotWelderSystemPeriodTime > 0.0) {
 				nokia5110Display->setCursor(35, 40);
-				nokia5110Display->print(msecToStr(pConfig->spotWelderSystemPeriodTime * 1000.0 * *(byte *) p.valuePtr));
+				nokia5110Display->print(msecToStr((pConfig->spotWelderSystemPeriodTime / 2) /*a ZCD miatt fele a pulzus ideje*/ * 1000.0 * *(byte *) p.valuePtr));
 			}
 			break;
 

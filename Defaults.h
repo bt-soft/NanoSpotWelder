@@ -13,14 +13,14 @@
 
 #define DEF_PULSE_COUNT_WELD_MODE		true	/* pulzusszámlálásos hegesztési mód */
 #define DEF_BEEP_STATE					true  	/* Beep */
-#define DEF_BACKLIGHT_STATE				false 	/* LCD háttérvilágítás */
+#define DEF_BACKLIGHT_STATE				true 	/* LCD háttérvilágítás */
 
 ///  1 periódus: 100Hz -> 10ms
 #define DEF_PREWELD_PULSE_CNT 			2		/* 20ms */
-#define DEF_PAUSE_PULSE_CNT 			50	 	/* 500ms */
-#define DEF_WELD_PULSE_CNT 				20 		/* 200ms */
+#define DEF_PAUSE_PULSE_CNT 			5	 	/* 50ms */
+#define DEF_WELD_PULSE_CNT 				4 		/* 40ms */
 
-#define DEF_MOT_TEMP_ALARM 				70 		/* MOT hõmérséklet riasztás bekapcsolási határ °C-ban */
+#define DEF_MOT_TEMP_ALARM 				50 		/* MOT hõmérséklet riasztás bekapcsolási határ °C-ban */
 
 #define SYSTEM_FREQUENCY				50.0	/* A ~230V-os hálózat frekvenciája Hz-ben */
 
