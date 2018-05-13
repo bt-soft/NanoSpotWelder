@@ -30656,8 +30656,6 @@ CONN_03x2
 <part name="GND12" library="SparkFun-PowerSymbols" library_urn="urn:adsk.eagle:library:530" deviceset="GND" device=""/>
 <part name="GND13" library="SparkFun-PowerSymbols" library_urn="urn:adsk.eagle:library:530" deviceset="GND" device=""/>
 <part name="GND14" library="SparkFun-PowerSymbols" library_urn="urn:adsk.eagle:library:530" deviceset="GND" device=""/>
-<part name="C4" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="C-EU" device="025-024X044" package3d_urn="urn:adsk.eagle:package:23630/1" value="100n"/>
-<part name="GND15" library="SparkFun-PowerSymbols" library_urn="urn:adsk.eagle:library:530" deviceset="GND" device=""/>
 <part name="R6" library="resistor" library_urn="urn:adsk.eagle:library:348" deviceset="R-EU_" device="0204/7" package3d_urn="urn:adsk.eagle:package:25945/1" value="1k"/>
 <part name="IC1" library="linear" library_urn="urn:adsk.eagle:library:262" deviceset="78*" device="T" package3d_urn="urn:adsk.eagle:package:16414/1" technology="05"/>
 <part name="IC2" library="linear" library_urn="urn:adsk.eagle:library:262" deviceset="78*" device="L" package3d_urn="urn:adsk.eagle:package:16416/2" technology="05" value="78L33"/>
@@ -30676,7 +30674,6 @@ CONN_03x2
 <part name="P+12" library="audio amplifier example" library_urn="urn:adsk.eagle:library:970892" deviceset="VCC" device="" value="+12V"/>
 <part name="R5" library="resistor" library_urn="urn:adsk.eagle:library:348" deviceset="R-EU_" device="0204/7" package3d_urn="urn:adsk.eagle:package:25945/1" value="4k7"/>
 <part name="~TÁP" library="con-ptr500" library_urn="urn:adsk.eagle:library:181" deviceset="AK300/2" device="" package3d_urn="urn:adsk.eagle:package:9881/1" value="~9V"/>
-<part name="D3" library="diode" library_urn="urn:adsk.eagle:library:210" deviceset="1N4148" device="DO35-10" package3d_urn="urn:adsk.eagle:package:43344/2" value="1N4148"/>
 <part name="P+5" library="audio amplifier example" library_urn="urn:adsk.eagle:library:970892" deviceset="VCC" device="" value="+5V"/>
 </parts>
 <sheets>
@@ -30695,8 +30692,6 @@ CONN_03x2
 <text x="25.4" y="124.46" size="1.778" layer="91">MISO</text>
 <text x="25.4" y="121.92" size="1.778" layer="91">SCK</text>
 <text x="25.4" y="119.38" size="1.778" layer="91">RST</text>
-<text x="-73.66" y="132.08" size="1.778" layer="91" rot="R90">
-ISP protection </text>
 </plain>
 <instances>
 <instance part="OK2" gate="G$1" x="-50.8" y="-38.1" smashed="yes">
@@ -30865,8 +30860,6 @@ ISP protection </text>
 <instance part="GND12" gate="1" x="-68.58" y="104.14" rot="R270"/>
 <instance part="GND13" gate="1" x="-68.58" y="99.06" rot="R270"/>
 <instance part="GND14" gate="1" x="-53.34" y="68.58"/>
-<instance part="C4" gate="G$1" x="-60.96" y="114.3" rot="R90"/>
-<instance part="GND15" gate="1" x="-68.58" y="114.3" rot="R270"/>
 <instance part="R6" gate="G$1" x="-50.8" y="137.16" smashed="yes" rot="R270">
 <attribute name="NAME" x="-49.3014" y="140.97" size="1.778" layer="95" rot="R270"/>
 <attribute name="VALUE" x="-54.102" y="140.97" size="1.778" layer="96" rot="R270"/>
@@ -30909,10 +30902,6 @@ ISP protection </text>
 <instance part="~TÁP" gate="-2" x="-160.02" y="68.58" smashed="yes" rot="MR180">
 <attribute name="NAME" x="-161.29" y="67.691" size="1.778" layer="95" rot="MR0"/>
 <attribute name="VALUE" x="-156.21" y="72.263" size="1.778" layer="96" rot="MR180"/>
-</instance>
-<instance part="D3" gate="G$1" x="-66.04" y="137.16" smashed="yes" rot="R270">
-<attribute name="NAME" x="-63.0174" y="137.16" size="1.778" layer="95" rot="R270"/>
-<attribute name="VALUE" x="-70.8914" y="139.7" size="1.778" layer="96" rot="R270"/>
 </instance>
 <instance part="P+5" gate="VCC" x="-66.04" y="147.32"/>
 </instances>
@@ -31016,11 +31005,6 @@ ISP protection </text>
 <pinref part="GND14" gate="1" pin="GND"/>
 <wire x1="-53.34" y1="73.66" x2="-53.34" y2="71.12" width="0.1524" layer="91"/>
 <junction x="-53.34" y="73.66"/>
-</segment>
-<segment>
-<pinref part="GND15" gate="1" pin="GND"/>
-<pinref part="C4" gate="G$1" pin="1"/>
-<wire x1="-66.04" y1="114.3" x2="-63.5" y2="114.3" width="0.1524" layer="91"/>
 </segment>
 <segment>
 <pinref part="J1" gate="G$1" pin="6"/>
@@ -31231,11 +31215,6 @@ ISP protection </text>
 <pinref part="P+12" gate="VCC" pin="VCC"/>
 <wire x1="-162.56" y1="12.7" x2="-165.1" y2="12.7" width="0.1524" layer="91"/>
 <wire x1="-165.1" y1="12.7" x2="-165.1" y2="27.94" width="0.1524" layer="91"/>
-</segment>
-<segment>
-<pinref part="D3" gate="G$1" pin="A"/>
-<pinref part="P+5" gate="VCC" pin="VCC"/>
-<wire x1="-66.04" y1="139.7" x2="-66.04" y2="144.78" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="A2" class="0">
@@ -31541,13 +31520,6 @@ ISP protection </text>
 <wire x1="-149.86" y1="60.96" x2="-149.86" y2="63.5" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="N$8" class="0">
-<segment>
-<pinref part="U4" gate="G$1" pin="AREF"/>
-<pinref part="C4" gate="G$1" pin="2"/>
-<wire x1="-55.88" y1="114.3" x2="-48.26" y2="114.3" width="0.1524" layer="91"/>
-</segment>
-</net>
 <net name="N$9" class="0">
 <segment>
 <pinref part="U4" gate="G$1" pin="PB6(XTAL1/TOSC1)"/>
@@ -31614,6 +31586,13 @@ ISP protection </text>
 </net>
 <net name="+5V_ISP" class="0">
 <segment>
+<pinref part="J1" gate="G$1" pin="2"/>
+<wire x1="53.34" y1="124.46" x2="55.88" y2="124.46" width="0.1524" layer="91"/>
+<wire x1="55.88" y1="124.46" x2="55.88" y2="129.54" width="0.1524" layer="91"/>
+<label x="55.88" y="129.54" size="1.778" layer="95"/>
+</segment>
+<segment>
+<pinref part="P+5" gate="VCC" pin="VCC"/>
 <pinref part="U4" gate="G$1" pin="VCC"/>
 <wire x1="-53.34" y1="121.92" x2="-48.26" y2="121.92" width="0.1524" layer="91"/>
 <pinref part="U4" gate="G$1" pin="AVCC"/>
@@ -31621,17 +31600,14 @@ ISP protection </text>
 <wire x1="-53.34" y1="124.46" x2="-53.34" y2="121.92" width="0.1524" layer="91"/>
 <wire x1="-53.34" y1="124.46" x2="-66.04" y2="124.46" width="0.1524" layer="91"/>
 <junction x="-53.34" y="124.46"/>
-<pinref part="D3" gate="G$1" pin="C"/>
-<wire x1="-66.04" y1="124.46" x2="-66.04" y2="134.62" width="0.1524" layer="91"/>
+<wire x1="-66.04" y1="124.46" x2="-66.04" y2="144.78" width="0.1524" layer="91"/>
 <wire x1="-66.04" y1="124.46" x2="-73.66" y2="124.46" width="0.1524" layer="91"/>
 <junction x="-66.04" y="124.46"/>
 <label x="-76.2" y="124.46" size="1.778" layer="95"/>
-</segment>
-<segment>
-<pinref part="J1" gate="G$1" pin="2"/>
-<wire x1="53.34" y1="124.46" x2="55.88" y2="124.46" width="0.1524" layer="91"/>
-<wire x1="55.88" y1="124.46" x2="55.88" y2="129.54" width="0.1524" layer="91"/>
-<label x="55.88" y="129.54" size="1.778" layer="95"/>
+<wire x1="-53.34" y1="121.92" x2="-53.34" y2="114.3" width="0.1524" layer="91"/>
+<junction x="-53.34" y="121.92"/>
+<pinref part="U4" gate="G$1" pin="AREF"/>
+<wire x1="-53.34" y1="114.3" x2="-48.26" y2="114.3" width="0.1524" layer="91"/>
 </segment>
 </net>
 </nets>
@@ -31640,10 +31616,6 @@ ISP protection </text>
 </schematic>
 </drawing>
 <compatibility>
-<note version="6.3" minversion="6.2.2" severity="warning">
-Since Version 6.2.2 text objects can contain more than one line,
-which will not be processed correctly with this version.
-</note>
 <note version="8.2" severity="warning">
 Since Version 8.2, EAGLE supports online libraries. The ids
 of those online libraries will not be understood (or retained)
