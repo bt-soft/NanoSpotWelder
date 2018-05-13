@@ -77,8 +77,6 @@ public:
 		configVars.motTempAlarm = DEF_MOT_TEMP_ALARM;
 	}
 
-public:
-
 	/**
 	 * Inicializáció
 	 */
