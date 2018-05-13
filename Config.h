@@ -22,9 +22,6 @@ class Config {
 
 public:
 
-	//Számított hálózati frekvencia
-	float spotWelderSystemPeriodTime = 0.0;
-
 	/**
 	 * Kell menteni a konfig-et?
 	 */

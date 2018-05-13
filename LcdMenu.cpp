@@ -249,9 +249,9 @@ void LcdMenu::drawMenuItemValue() {
 			break;
 
 		case PULSE: //msec kiírás
-			if (pConfig->spotWelderSystemPeriodTime > 0.0) {
+			if (SYSTEM_PERIOD_TIME > 0.0) {
 				nokia5110Display->setCursor(35, 40);
-				nokia5110Display->print(msecToStr((pConfig->spotWelderSystemPeriodTime / 2) /*a ZCD miatt fele a pulzus ideje*/ * 1000.0 * *(byte *) p.valuePtr));
+				nokia5110Display->print(msecToStr(*(byte *) p.valuePtr));
 			}
 			break;
 
@@ -446,10 +446,13 @@ void LcdMenu::exitCallBack(void) {
 /**
  * msec -> String konverter
  */
-String LcdMenu::msecToStr(long x) {
+String LcdMenu::msecToStr(long pulseCnt) {
 
-	byte sec = x / 1000;
-	byte msec = x % (sec * 1000);
+	//A ZCD miatt SYSTEM_FREQUENCY-n (100Hz vagy 120Hz-en) vagyunk
+	long fullPulseTime = (SYSTEM_PERIOD_TIME / 2) * 1000 * pulseCnt;
+
+	byte sec = fullPulseTime / 1000;
+	int msec = fullPulseTime - (sec * 1000);
 	String res = "";
 
 	if (sec > 0) {

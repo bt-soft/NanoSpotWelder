@@ -429,9 +429,6 @@ void setup(void) {
 
 	//idõmérés indul
 	lastMiliSec = millis();
-
-	//kiszámítjuk a periódus idõt
-	pConfig->spotWelderSystemPeriodTime = 1 / (float) SYSTEM_FREQUENCY;
 }
 
 /**

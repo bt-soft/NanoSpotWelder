@@ -24,4 +24,7 @@
 
 #define SYSTEM_FREQUENCY				50.0	/* A ~230V-os hálózat frekvenciája Hz-ben */
 
+//számított hálózati periódus idõ
+#define SYSTEM_PERIOD_TIME				1.0/SYSTEM_FREQUENCY
+
 #endif /* DEFAULTS_H_ */
