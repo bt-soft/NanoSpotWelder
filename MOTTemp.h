@@ -2,7 +2,7 @@
  * MOTTemp.h
  *
  *  Created on: 2018. máj. 6.
- *      Author: BT
+ *      Author: bt-soft
  */
 
 #ifndef MOTTEMP_H_

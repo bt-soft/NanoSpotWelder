@@ -2,7 +2,7 @@
  * Nokia5110DisplayWrapper.h
  *
  *  Created on: 2018. ápr. 15.
- *      Author: BT
+ *      Author: bt-soft
  */
 
 #ifndef NOKIA5110DISPLAYWRAPPER_H_

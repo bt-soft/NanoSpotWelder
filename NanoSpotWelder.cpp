@@ -2,7 +2,7 @@
  * NanoSpotWelder.cpp
  *
  *  Created on: 2018. ápr. 15.
- *      Author: BT
+ *      Author: bt-soft
  */
 #include <Arduino.h>
 #include <WString.h>

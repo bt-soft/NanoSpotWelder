@@ -2,7 +2,7 @@
  * Environment.h
  *
  *  Created on: 2018. máj. 6.
- *      Author: BT
+ *      Author: bt-soft
  */
 
 #ifndef ENVIRONMENT_H_

@@ -2,7 +2,7 @@
  * NanoSpotWederPinouts.h
  *
  *  Created on: 2018. ápr. 26.
- *      Author: u626374
+ *      Author: bt-soft
  */
 
 #ifndef NANOSPOTWEDERPINOUTS_H_

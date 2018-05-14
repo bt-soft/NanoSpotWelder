@@ -2,7 +2,7 @@
  * RotaryEncoderWrapper.h
  *
  *  Created on: 2018. ápr. 17.
- *      Author: BT
+ *      Author: bt-soft
  */
 
 #define SMALLEST_CODESIZE
