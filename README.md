@@ -3,7 +3,7 @@
 # NanoSpotWelder
 MOT Spot Welder Controller with Arduino Nano V3 and ATmega328P microcontroller
 
-The project full description: [http://electrodiy.blog.hu/](http://electrodiy.blog.hu/)
+Full description of the project: [http://electrodiy.blog.hu/](http://electrodiy.blog.hu/)
 
 
 Licence
