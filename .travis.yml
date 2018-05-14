@@ -1,11 +1,24 @@
 language: cpp
 compiler: gcc
 
-#Maven local cache
-cache:
-  directories:
-      - "${HOME}/.m2"
+before_install:
+  - wget http://downloads.arduino.cc/arduino-1.6.5-linux64.tar.xz
+  - tar xf arduino-1.6.5-linux64.tar.xz
+  - sudo mv arduino-1.6.5 /usr/local/share/arduino
+  - sudo ln -s /usr/local/share/arduino/arduino /usr/local/bin/arduino
+  
+install:
+  - ln -s $PWD /usr/local/share/arduino/libraries/MicroDebug
 
+script:
+  - arduino --verify --board ${BOARD} $PWD/examples/FormattingSerialDebug/FormattingSerialDebug.ino
+  - arduino --verify --board ${BOARD} $PWD/examples/LedDebug/LedDebug.ino
+  - arduino --verify --board ${BOARD} $PWD/examples/SerialDebug/SerialDebug.ino  
+  
+env:
+ - BOARD=arduino:avr:nano
+ - BOARD=arduino:avr:nano:cpu=atmega328
+  
 email:
     on_success: change
     on_failure: change
