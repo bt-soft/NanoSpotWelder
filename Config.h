@@ -2,7 +2,7 @@
  * Config.h
  *
  *  Created on: 2018. ápr. 15.
- *      Author: BT
+ *      Author: bt-soft
  */
 
 #ifndef CONFIG_H_

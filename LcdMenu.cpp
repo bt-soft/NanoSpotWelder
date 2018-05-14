@@ -2,7 +2,7 @@
  * LcdMenu.cpp
  *
  *  Created on: 2018. ápr. 26.
- *      Author: u626374
+ *      Author: bt-soft
  */
 
 #include "LcdMenu.h"

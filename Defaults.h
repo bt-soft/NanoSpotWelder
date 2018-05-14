@@ -2,7 +2,7 @@
  * Defaults.h
  *
  *  Created on: 2018. ápr. 15.
- *      Author: BT
+ *      Author: bt-soft
  */
 
 #ifndef DEFAULTS_H_
