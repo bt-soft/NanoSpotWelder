@@ -1,0 +1,11 @@
+language: cpp
+compiler: gcc
+
+#Maven local cache
+cache:
+  directories:
+      - "${HOME}/.m2"
+
+email:
+    on_success: change
+    on_failure: change
