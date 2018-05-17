@@ -297,7 +297,7 @@ void LcdMenu::stepDown(void) {
 }
 
 /**
- * Menüben lefelé lépkedés
+ * Menüben felfelé lépkedés
  */
 void LcdMenu::stepUp(void) {
 	//Az elsõ elem a kiválasztott? Ha igen, akkor nem megyünk tovább
@@ -308,7 +308,7 @@ void LcdMenu::stepUp(void) {
 	//Az elõzõ menüelem lesz a kiválasztott
 	menuViewport.selectedItem--;
 
-	//A viewport aljánál túljutottunk? Ha igen, akkor scrollozunk egyet lefelé
+	//A viewport tetejénél túljutottunk? Ha igen, akkor scrollozunk egyet felfelé
 	if (menuViewport.selectedItem < menuViewport.firstItem) {
 		menuViewport.firstItem--;
 		menuViewport.lastItem--;
@@ -385,7 +385,7 @@ void LcdMenu::lcdContrastCallBack(void) {
 }
 
 /**
- * LCD Elõfeszítés kezelése
+ * LCD Elõfeszítés (bias) kezelése
  */
 void LcdMenu::lcdBiasCallBack(void) {
 	nokia5110Display->setBias(pConfig->configVars.bias);
