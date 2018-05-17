@@ -30,6 +30,6 @@
 #endif
 
 // Digitális (DS18B30) a hõmérõ szenzor? Ha LM335, akkor ki kell kommentezni
-//#define USE_DIGITAL_TEMPERATURE_SENSOR
+#define USE_DIGITAL_TEMPERATURE_SENSOR
 
 #endif /* ENVIRONMENT_H_ */
