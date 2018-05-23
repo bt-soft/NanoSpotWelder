@@ -81,8 +81,8 @@ void LcdMenu::initMenuItems(void) {
 	menuItems[1] = {"PreWeld pulse", PULSE, &pConfig->configVars.preWeldPulseCnt, 0, 255, NULL};
 	menuItems[2] = {"Pause pulse", PULSE, &pConfig->configVars.pausePulseCnt, 0, 255, NULL};
 	menuItems[3] = {"Weld pulse", PULSE, &pConfig->configVars.weldPulseCnt, 1, 255, NULL};
-	menuItems[4] = {"Bundle cnt", BYTE, &pConfig->configVars.packetCnt, 1, 99, NULL};
-	menuItems[5] = {"Bundle pause", PULSE, &pConfig->configVars.packetPauseCnt, 1, 255, NULL};
+	menuItems[4] = {"Packets cnt", BYTE, &pConfig->configVars.packetCnt, 1, 99, NULL};
+	menuItems[5] = {"Packets pause", PULSE, &pConfig->configVars.packetPauseCnt, 1, 255, NULL};
 	menuItems[6] = {"MOT T.Alrm", TEMP, &pConfig->configVars.motTempAlarm, 50, 90, NULL};
 	menuItems[7] = {"LCD contrast", BYTE, &pConfig->configVars.contrast, 0, 127, &LcdMenu::lcdContrastCallBack};
 	//menuItems[8] = {"LCD bias", BYTE, &pConfig->configVars.bias, 0, 7, &LcdMenu::lcdBiasCallBack};
