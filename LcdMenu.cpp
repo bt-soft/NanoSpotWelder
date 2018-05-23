@@ -81,13 +81,15 @@ void LcdMenu::initMenuItems(void) {
 	menuItems[1] = {"PreWeld pulse", PULSE, &pConfig->configVars.preWeldPulseCnt, 0, 255, NULL};
 	menuItems[2] = {"Pause pulse", PULSE, &pConfig->configVars.pausePulseCnt, 0, 255, NULL};
 	menuItems[3] = {"Weld pulse", PULSE, &pConfig->configVars.weldPulseCnt, 1, 255, NULL};
-	menuItems[4] = {"MOT T.Alrm", TEMP, &pConfig->configVars.motTempAlarm, 50, 90, NULL};
-	menuItems[5] = {"LCD contrast", BYTE, &pConfig->configVars.contrast, 0, 127, &LcdMenu::lcdContrastCallBack};
-	//menuItems[6] = {"LCD bias", BYTE, &pConfig->configVars.bias, 0, 7, &LcdMenu::lcdBiasCallBack};
-	menuItems[6] = {"LCD light", BOOL, &pConfig->configVars.blackLightState, 0, 1, &LcdMenu::lcdBackLightCallBack};
-	menuItems[7] = {"Beep", BOOL, &pConfig->configVars.beepState, 0, 1, &LcdMenu::beepStateCallBack};
-	menuItems[8] = {"Fctry reset", FUNCT, NULL, 0, 0, &LcdMenu::factoryResetCallBack};
-	menuItems[9] = {"Exit menu", FUNCT, NULL, 0, 0, &LcdMenu::exitCallBack};
+	menuItems[4] = {"Bundle cnt", BYTE, &pConfig->configVars.bundleCnt, 1, 255, NULL};
+	menuItems[5] = {"Bundle pause", PULSE, &pConfig->configVars.bundlePauseCnt, 1, 255, NULL};
+	menuItems[6] = {"MOT T.Alrm", TEMP, &pConfig->configVars.motTempAlarm, 50, 90, NULL};
+	menuItems[7] = {"LCD contrast", BYTE, &pConfig->configVars.contrast, 0, 127, &LcdMenu::lcdContrastCallBack};
+	//menuItems[8] = {"LCD bias", BYTE, &pConfig->configVars.bias, 0, 7, &LcdMenu::lcdBiasCallBack};
+	menuItems[8] = {"LCD light", BOOL, &pConfig->configVars.blackLightState, 0, 1, &LcdMenu::lcdBackLightCallBack};
+	menuItems[9] = {"Beep", BOOL, &pConfig->configVars.beepState, 0, 1, &LcdMenu::beepStateCallBack};
+	menuItems[10] = {"Fctry reset", FUNCT, NULL, 0, 0, &LcdMenu::factoryResetCallBack};
+	menuItems[11] = {"Exit menu", FUNCT, NULL, 0, 0, &LcdMenu::exitCallBack};
 }
 
 /**

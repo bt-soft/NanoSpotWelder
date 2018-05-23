@@ -278,12 +278,14 @@ void menuInactiveController(void) {
 typedef enum weldState_t {
 	PRE_WELD, 		//Elõimpulzus
 	PAUSE_WELD,  	//Szünet a két impulzus között
-	WELD, 			//hegesztõ impulzus
+	WELD, 			//Hegesztõ impulzus
+	BUNDLE_PAUSE,	//Hegesztési csomagok közötti várakozás
 	WELD_END 		//Nincs hegesztés
 } WeldState_T;
 
 volatile WeldState_T weldCurrentState = WELD_END; //hegesztési állapot jelzõ
-volatile uint16_t weldPeriodCnt = 0; //Periódus Számláló, hegesztés alatt megszakításkor inkrementálódik
+volatile uint8_t weldPeriodCnt = 0; //Periódus Számláló, hegesztés alatt megszakításkor inkrementálódik
+volatile uint8_t weldBundleCnt = 0; //hegesztési csomagok számlálója
 
 /**
  * ZCD interrupt rutin
@@ -326,17 +328,37 @@ void zeroCrossDetect(void) {
 		case WELD:
 			//bekapcsoljuk a triakot, ha még nincs bekapcsolva
 			if (!digitalRead(PIN_TRIAC)) {
-				weldPeriodCnt = 0;
+				weldPeriodCnt = 1;
 				digitalWrite(PIN_TRIAC, HIGH); //TRIAC BE
 				return;
 			}
 
-			//Ha elértük a pulzusszámot, akkor kikapcsolunk
+			//Ha elértük a pulzusszámot, akkor kikapcsolunk és megvizsgáljuk, hogy kell-e a csomagokkal foglalkoznunk?
 			if (++weldPeriodCnt >= pConfig->configVars.weldPulseCnt) {
+
 				digitalWrite(PIN_TRIAC, LOW); //TRIAC KI
-				weldCurrentState = WELD_END;
+
+				if(pConfig->configVars.bundleCnt == 1 //csak egy csomag van megadva?
+						|| ++weldBundleCnt >= pConfig->configVars.bundleCnt //több csomag esetén elértük már a csomagok számát?
+						) {
+					weldCurrentState = WELD_END;
+				} else {
+					//Ha több hegesztési csomag van beállítva, akkor elkezdjük a csomagok közötti várakozást
+					weldPeriodCnt = 0;
+					weldCurrentState = BUNDLE_PAUSE;
+				}
 			}
 			break;
+
+			//Két hegesztési csomag közötti várakozában vagyunk
+		case BUNDLE_PAUSE:
+			//elértük már a két csomag közötti várakozó impulzuszok számát?
+			if (++weldPeriodCnt >= pConfig->configVars.bundlePauseCnt) {
+				weldPeriodCnt = 0;
+				weldCurrentState = PRE_WELD;
+			}
+			break;
+
 
 			//Hegesztés vége
 		case WELD_END:
@@ -363,6 +385,7 @@ void weldButtonPushed(void) {
 
 		//Beállítjuk, hogy a PRE_WELD állapotból induljunk
 		weldCurrentState = PRE_WELD;
+		weldBundleCnt = 0;
 
 		//Megvárjuk a hegesztési folyamat végét
 		while (weldCurrentState != WELD_END) {

@@ -57,6 +57,9 @@ public:
 		uint8_t pausePulseCnt;		//szünet impulzus szám
 		uint8_t weldPulseCnt;		//hegesztés impulzus szám
 
+		uint8_t bundleCnt;			//hegesztés csomagok ismétlési száma
+		uint8_t bundlePauseCnt;		//hegesztés csomagok ismétlése közötti várakozási impulzusok száma
+
 		byte motTempAlarm;			//MOT hõmérséklet magas riasztás
 
 	} ConfigT;
@@ -87,6 +90,9 @@ public:
 		configVars.preWeldPulseCnt = DEF_PREWELD_PULSE_CNT;
 		configVars.pausePulseCnt = DEF_PAUSE_PULSE_CNT;
 		configVars.weldPulseCnt = DEF_WELD_PULSE_CNT;
+
+		configVars.bundleCnt = DEF_BUNDLE_CNT;
+		configVars.bundlePauseCnt = DEF_BUNDLE_PAUSE_CNT;
 
 		//MOT Temp alarm
 		configVars.motTempAlarm = DEF_MOT_TEMP_ALARM;
