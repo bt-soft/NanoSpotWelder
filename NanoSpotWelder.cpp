@@ -338,8 +338,8 @@ void zeroCrossDetect(void) {
 
 				digitalWrite(PIN_TRIAC, LOW); //TRIAC KI
 
-				if(pConfig->configVars.bundleCnt == 1 //csak egy csomag van megadva?
-						|| ++weldBundleCnt >= pConfig->configVars.bundleCnt //több csomag esetén elértük már a csomagok számát?
+				if(pConfig->configVars.packetCnt == 1 //csak egy csomag van megadva?
+						|| ++weldBundleCnt >= pConfig->configVars.packetCnt //több csomag esetén elértük már a csomagok számát?
 						) {
 					weldCurrentState = WELD_END;
 				} else {
@@ -353,7 +353,7 @@ void zeroCrossDetect(void) {
 			//Két hegesztési csomag közötti várakozában vagyunk
 		case BUNDLE_PAUSE:
 			//elértük már a két csomag közötti várakozó impulzuszok számát?
-			if (++weldPeriodCnt >= pConfig->configVars.bundlePauseCnt) {
+			if (++weldPeriodCnt >= pConfig->configVars.packetPauseCnt) {
 				weldPeriodCnt = 0;
 				weldCurrentState = PRE_WELD;
 			}

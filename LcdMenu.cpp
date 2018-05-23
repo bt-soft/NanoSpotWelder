@@ -81,8 +81,8 @@ void LcdMenu::initMenuItems(void) {
 	menuItems[1] = {"PreWeld pulse", PULSE, &pConfig->configVars.preWeldPulseCnt, 0, 255, NULL};
 	menuItems[2] = {"Pause pulse", PULSE, &pConfig->configVars.pausePulseCnt, 0, 255, NULL};
 	menuItems[3] = {"Weld pulse", PULSE, &pConfig->configVars.weldPulseCnt, 1, 255, NULL};
-	menuItems[4] = {"Bundle cnt", BYTE, &pConfig->configVars.bundleCnt, 1, 255, NULL};
-	menuItems[5] = {"Bundle pause", PULSE, &pConfig->configVars.bundlePauseCnt, 1, 255, NULL};
+	menuItems[4] = {"Bundle cnt", BYTE, &pConfig->configVars.packetCnt, 1, 99, NULL};
+	menuItems[5] = {"Bundle pause", PULSE, &pConfig->configVars.packetPauseCnt, 1, 255, NULL};
 	menuItems[6] = {"MOT T.Alrm", TEMP, &pConfig->configVars.motTempAlarm, 50, 90, NULL};
 	menuItems[7] = {"LCD contrast", BYTE, &pConfig->configVars.contrast, 0, 127, &LcdMenu::lcdContrastCallBack};
 	//menuItems[8] = {"LCD bias", BYTE, &pConfig->configVars.bias, 0, 7, &LcdMenu::lcdBiasCallBack};
@@ -107,12 +107,12 @@ void LcdMenu::resetMenu(void) {
  */
 void LcdMenu::drawTempValue(float *pCurrentMotTemp) {
 	nokia5110Display->setTextSize(2);
-	nokia5110Display->setCursor(abs(*pCurrentMotTemp) > 99.9 ? 0 : 10, 32);
+	nokia5110Display->setCursor(abs(*pCurrentMotTemp) > 99.9 ? 0 : 10, 34);
 	dtostrf(*pCurrentMotTemp, 1, 1, tempBuff);
 	nokia5110Display->print(tempBuff);
 
 	nokia5110Display->setTextSize(1);
-	nokia5110Display->setCursor(72, 38);
+	nokia5110Display->setCursor(72, 40);
 	sprintf(tempBuff, "%cC", DEGREE_SYMBOL_CODE);
 	nokia5110Display->print(tempBuff);
 }
@@ -128,9 +128,16 @@ void LcdMenu::drawMainDisplay(float *pCurrentMotTemp) {
 
 	//Pulzusszámláló mód
 	if (pConfig->configVars.pulseCountWeldMode) {
+
+		sprintf(tempBuff, "Pc %-2d  PcP %-3d", pConfig->configVars.packetCnt,  pConfig->configVars.packetPauseCnt);
+		nokia5110Display->setTextColor(WHITE, BLACK);
+		nokia5110Display->println(tempBuff);
+		nokia5110Display->setTextColor(BLACK, WHITE);
+
 		nokia5110Display->println("Pwld  Paus Wld");
 		sprintf(tempBuff, "%-3d   %-3d  %-3d", pConfig->configVars.preWeldPulseCnt, pConfig->configVars.pausePulseCnt, pConfig->configVars.weldPulseCnt);
 		nokia5110Display->println(tempBuff);
+
 	} else { //kézi hegesztés
 		nokia5110Display->setTextColor(WHITE, BLACK);
 		nokia5110Display->println("Manual welding");
@@ -138,7 +145,7 @@ void LcdMenu::drawMainDisplay(float *pCurrentMotTemp) {
 	}
 
 	//Hõmérséklet kiírása
-	nokia5110Display->setCursor(0, 22);
+	nokia5110Display->setCursor(0, 26);
 	nokia5110Display->print("MOT Temp:");
 	this->drawTempValue(pCurrentMotTemp);
 
