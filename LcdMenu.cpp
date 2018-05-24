@@ -20,6 +20,7 @@
  *      Author: bt-soft
  */
 
+#include "Environment.h"
 #include "LcdMenu.h"
 #include "Buzzer.h"
 
@@ -43,7 +44,7 @@ LcdMenu::LcdMenu(void) {
 
 	//Menüelemek inicializálása
 	initMenuItems();
-	resetMenu();
+	resetViewPort();
 }
 
 /**
@@ -77,25 +78,59 @@ void LcdMenu::drawSplashScreen(void) {
  */
 void LcdMenu::initMenuItems(void) {
 
-	menuItems[0] = {"Weld mode", WELD, &pConfig->configVars.pulseCountWeldMode, 0, 1, NULL};
-	menuItems[1] = {"PreWeld pulse", PULSE, &pConfig->configVars.preWeldPulseCnt, 0, 255, NULL};
-	menuItems[2] = {"Pause pulse", PULSE, &pConfig->configVars.pausePulseCnt, 0, 255, NULL};
-	menuItems[3] = {"Weld pulse", PULSE, &pConfig->configVars.weldPulseCnt, 1, 255, NULL};
-	menuItems[4] = {"Packets cnt", BYTE, &pConfig->configVars.packetCnt, 1, 99, NULL};
-	menuItems[5] = {"Packets pause", PULSE, &pConfig->configVars.packetPauseCnt, 1, 255, NULL};
-	menuItems[6] = {"MOT T.Alrm", TEMP, &pConfig->configVars.motTempAlarm, 50, 90, NULL};
-	menuItems[7] = {"LCD contrast", BYTE, &pConfig->configVars.contrast, 0, 127, &LcdMenu::lcdContrastCallBack};
-	//menuItems[8] = {"LCD bias", BYTE, &pConfig->configVars.bias, 0, 7, &LcdMenu::lcdBiasCallBack};
-	menuItems[8] = {"LCD light", BOOL, &pConfig->configVars.blackLightState, 0, 1, &LcdMenu::lcdBackLightCallBack};
-	menuItems[9] = {"Beep", BOOL, &pConfig->configVars.beepState, 0, 1, &LcdMenu::beepStateCallBack};
-	menuItems[10] = {"Fctry reset", FUNCT, NULL, 0, 0, &LcdMenu::factoryResetCallBack};
-	menuItems[11] = {"Exit menu", FUNCT, NULL, 0, 0, &LcdMenu::exitCallBack};
+	pMainMenu = new Menu_t();
+	pMainMenu->menuTitle = "MAIN MENU";
+	pMainMenu->menuItemsCnt = 0;
+	pMainMenu->pMenuItems = NULL;
+
+	//--- Weld settings alMenü
+	pWeldSettingsSubMenu = new Menu_t();
+	pWeldSettingsSubMenu->menuTitle = "WELD SET";
+	pWeldSettingsSubMenu->menuItemsCnt = 0;
+	pWeldSettingsSubMenu->pMenuItems = NULL;
+	addMenuItem(pWeldSettingsSubMenu, { "Weld mode", WELD, &pConfig->configVars.pulseCountWeldMode, 0, 1, NULL });
+	addMenuItem(pWeldSettingsSubMenu, { "PreWeld pulse", PULSE, &pConfig->configVars.preWeldPulseCnt, 0, 255, NULL });
+	addMenuItem(pWeldSettingsSubMenu, { "Pause pulse", PULSE, &pConfig->configVars.pausePulseCnt, 0, 255, NULL });
+	addMenuItem(pWeldSettingsSubMenu, { "Weld pulse", PULSE, &pConfig->configVars.weldPulseCnt, 1, 255, NULL });
+	addMenuItem(pWeldSettingsSubMenu, { "Packets cnt", BYTE, &pConfig->configVars.packetCnt, 1, 99, NULL });
+	addMenuItem(pWeldSettingsSubMenu, { "Packets pause", PULSE, &pConfig->configVars.packetPauseCnt, 1, 255, NULL });
+	addMenuItem(pWeldSettingsSubMenu, { "back..", FUNCT, NULL, 0, 1, &LcdMenu::exitSubMenu });
+
+	// --- lcdSettings alMenü
+	pLcdSettingsSubMenu = new Menu_t();
+	pLcdSettingsSubMenu->menuTitle = "LCD SET";
+	pLcdSettingsSubMenu->menuItemsCnt = 0;
+	pLcdSettingsSubMenu->pMenuItems = NULL;
+	addMenuItem(pLcdSettingsSubMenu, { "Contrast", BYTE, &pConfig->configVars.contrast, 0, 127, &LcdMenu::lcdContrastCallBack });
+	addMenuItem(pLcdSettingsSubMenu, { "Bias", BYTE, &pConfig->configVars.bias, 0, 7, &LcdMenu::lcdBiasCallBack });
+	addMenuItem(pLcdSettingsSubMenu, { "Light", BOOL, &pConfig->configVars.blackLightState, 0, 1, &LcdMenu::lcdBackLightCallBack });
+	addMenuItem(pLcdSettingsSubMenu, { "back..", FUNCT, NULL, 0, 1, &LcdMenu::exitSubMenu });
+
+	// --- Factory Reset alMenü
+	pFactoryResetSubMenu = new Menu_t();
+	pFactoryResetSubMenu->menuTitle = "Factory reset";
+	pFactoryResetSubMenu->menuItemsCnt = 0;
+	pFactoryResetSubMenu->pMenuItems = NULL;
+	addMenuItem(pFactoryResetSubMenu, { "Execute!", FUNCT, NULL, 0, 0, &LcdMenu::factoryResetCallBack });
+	addMenuItem(pFactoryResetSubMenu, { "cancel..", FUNCT, NULL, 0, 1, &LcdMenu::exitSubMenu });
+
+	//Main Menü feltöltése
+	addMenuItem(pMainMenu, { "Weld set ...", FUNCT, NULL, 0, 0, &LcdMenu::enterWeldSettingsSubmenuCallBack });
+	addMenuItem(pMainMenu, { "MOT T.Alrm", TEMP, &pConfig->configVars.motTempAlarm, 50, 90, NULL });
+	addMenuItem(pMainMenu, { "LCD set ...", FUNCT, NULL, 0, 0, &LcdMenu::enterLcdSettingsSubmenuCallBack });
+	addMenuItem(pMainMenu, { "Beep", BOOL, &pConfig->configVars.beepState, 0, 1, &LcdMenu::beepStateCallBack });
+	addMenuItem(pMainMenu, { "Fctry rst ...", FUNCT, NULL, 0, 0, &LcdMenu::enterFactoryResetSubmenuCallBack });
+	addMenuItem(pMainMenu, { "Exit menu", FUNCT, NULL, 0, 0, &LcdMenu::menuExitCallBack });
+
+	//Main menü a default menü
+	pCurrentMenu = pMainMenu;
+
 }
 
 /**
  * Menü alapállapotba
  */
-void LcdMenu::resetMenu(void) {
+void LcdMenu::resetViewPort(void) {
 	//viewPort beállítás
 	menuViewport.firstItem = 0;
 	menuViewport.lastItem = MENU_VIEWPORT_SIZE - 1;
@@ -105,7 +140,7 @@ void LcdMenu::resetMenu(void) {
 /**
  * Hõmérséklet kiírása a main- és az alarm screen-nél
  */
-void LcdMenu::drawTempValue(float *pCurrentMotTemp) {
+void LcdMenu::drawTemperatureValue(float *pCurrentMotTemp) {
 	nokia5110Display->setTextSize(2);
 	nokia5110Display->setCursor(abs(*pCurrentMotTemp) > 99.9 ? 0 : 10, 34);
 	dtostrf(*pCurrentMotTemp, 1, 1, tempBuff);
@@ -129,7 +164,7 @@ void LcdMenu::drawMainDisplay(float *pCurrentMotTemp) {
 	//Pulzusszámláló mód
 	if (pConfig->configVars.pulseCountWeldMode) {
 
-		sprintf(tempBuff, "Pc %-2d  PcP %-3d", pConfig->configVars.packetCnt,  pConfig->configVars.packetPauseCnt);
+		sprintf(tempBuff, "Pc %-2d  PcP %-3d", pConfig->configVars.packetCnt, pConfig->configVars.packetPauseCnt);
 		nokia5110Display->setTextColor(WHITE, BLACK);
 		nokia5110Display->println(tempBuff);
 		nokia5110Display->setTextColor(BLACK, WHITE);
@@ -147,7 +182,7 @@ void LcdMenu::drawMainDisplay(float *pCurrentMotTemp) {
 	//Hõmérséklet kiírása
 	nokia5110Display->setCursor(0, 26);
 	nokia5110Display->print("MOT Temp:");
-	this->drawTempValue(pCurrentMotTemp);
+	this->drawTemperatureValue(pCurrentMotTemp);
 
 	nokia5110Display->display();
 }
@@ -166,24 +201,24 @@ void LcdMenu::drawWarningDisplay(float *pCurrentMotTemp) {
 	nokia5110Display->println("!!!!!!!!!!!!!!");
 
 	//Hõmérséklet kiírása
-	this->drawTempValue(pCurrentMotTemp);
+	this->drawTemperatureValue(pCurrentMotTemp);
 
 	nokia5110Display->display();
 }
 
 /**
- * MainMenu kirajzolása
+ * Aktuális menu kirajzolása
  *  - Menüfelirat
  *  - viewportban látható elemek megjeelnítése
  *  - kiválasztott elem hátterének megváltoztatása
  */
-void LcdMenu::drawMainMenu(void) {
+void LcdMenu::drawCurrentMenu(void) {
 
 	nokia5110Display->clearDisplay();
 	nokia5110Display->setTextSize(1);
 	nokia5110Display->setTextColor(BLACK, WHITE);
 	nokia5110Display->setCursor(15, 0);
-	nokia5110Display->print("MAIN MENU");
+	nokia5110Display->print(pCurrentMenu->menuTitle);
 	nokia5110Display->drawFastHLine(0, 10, 83, BLACK);
 
 	for (byte i = 0; i < MENU_VIEWPORT_SIZE; i++) {
@@ -200,7 +235,11 @@ void LcdMenu::drawMainMenu(void) {
 			nokia5110Display->setTextColor(BLACK, WHITE);
 			nokia5110Display->print(" ");
 		}
-		nokia5110Display->print(menuItems[itemNdx].title);
+
+		//ha van kiírandó van menüelem
+		if (pCurrentMenu->menuItemsCnt > itemNdx) {
+			nokia5110Display->print((pCurrentMenu->pMenuItems + itemNdx)->title);
+		}
 
 	}
 	nokia5110Display->display();
@@ -211,20 +250,20 @@ void LcdMenu::drawMainMenu(void) {
  */
 void LcdMenu::drawMenuItemValue() {
 
-	MenuItemT p = menuItems[menuViewport.selectedItem];
+	MenuItem_t *pSelectedMenuItem = this->getSelectedMenuItemPtr();
 
 	nokia5110Display->clearDisplay();
 
 	nokia5110Display->setTextSize(1);
 	nokia5110Display->setTextColor(BLACK, WHITE);
 	nokia5110Display->setCursor(5, 0);
-	nokia5110Display->print(p.title);
+	nokia5110Display->print(pSelectedMenuItem->title);
 	nokia5110Display->drawFastHLine(0, 10, 83, BLACK);
 
 	nokia5110Display->setCursor(5, 15);
 
 	//Prompt
-	switch (p.valueType) {
+	switch (pSelectedMenuItem->valueType) {
 		case TEMP:
 		case BYTE:
 		case BOOL:
@@ -245,26 +284,27 @@ void LcdMenu::drawMenuItemValue() {
 
 	//Típus szerinti kiírás
 	String dspValue = "unknown";
-	switch (p.valueType) {
+	switch (pSelectedMenuItem->valueType) {
 		case BOOL:
-			dspValue = *(bool *) p.valuePtr ? "ON" : "OFF";
+			dspValue = *(bool *) pSelectedMenuItem->valuePtr ? "ON" : "OFF";
 			break;
 
 		case WELD:
-			dspValue = *(bool *) p.valuePtr ? "Pulse" : "Manual";
+			dspValue = *(bool *) pSelectedMenuItem->valuePtr ? "Pulse" : "Manual";
 			break;
 
 		case PULSE:
 		case TEMP:
 		case BYTE:
-			dspValue = String(*(byte *) p.valuePtr);
+			dspValue = String(*(byte *) pSelectedMenuItem->valuePtr);
 			break;
 	}
+	dspValue = "hello";
 	nokia5110Display->print(dspValue);
 
 	//Mértékegység
 	nokia5110Display->setTextSize(1);
-	switch (p.valueType) {
+	switch (pSelectedMenuItem->valueType) {
 
 		case TEMP: //°C kiírás
 			nokia5110Display->setCursor(55, 30);
@@ -275,7 +315,7 @@ void LcdMenu::drawMenuItemValue() {
 		case PULSE: //msec kiírás
 			if (SYSTEM_PERIOD_TIME > 0.0) {
 				nokia5110Display->setCursor(35, 40);
-				nokia5110Display->print(msecToStr(*(byte *) p.valuePtr));
+				nokia5110Display->print(msecToStr(*(byte *) pSelectedMenuItem->valuePtr));
 			}
 			break;
 
@@ -291,7 +331,7 @@ void LcdMenu::drawMenuItemValue() {
  */
 void LcdMenu::stepDown(void) {
 	//Az utolsó elem a kiválasztott? Ha igen, akkor nem megyünk tovább
-	if (menuViewport.selectedItem == LAST_MENUITEM_NDX) {
+	if (menuViewport.selectedItem == pCurrentMenu->menuItemsCnt - 1) {
 		return;
 	}
 
@@ -303,6 +343,8 @@ void LcdMenu::stepDown(void) {
 		menuViewport.firstItem++;
 		menuViewport.lastItem++;
 	}
+
+	drawCurrentMenu();
 }
 
 /**
@@ -323,13 +365,21 @@ void LcdMenu::stepUp(void) {
 		menuViewport.lastItem--;
 	}
 
+	drawCurrentMenu();
 }
 
 /**
  * A kiválasztott menüelem értékének növelése
  */
 void LcdMenu::incSelectedValue(void) {
-	MenuItemT *pSelectedMenuItem = this->getSelectedItemPtr();
+	MenuItem_t *pSelectedMenuItem = this->getSelectedMenuItemPtr();
+
+//#ifdef SERIAL_DEBUG
+//	Serial.print("incSelectedValue() ");
+//	Serial.print(pSelectedMenuItem->title);
+//	Serial.print(" -> ");
+//	Serial.println(*(byte *) pSelectedMenuItem->valuePtr);
+//#endif
 
 	switch (pSelectedMenuItem->valueType) {
 		case LcdMenu::BYTE:
@@ -353,7 +403,7 @@ void LcdMenu::incSelectedValue(void) {
  */
 void LcdMenu::decSelectedValue(void) {
 
-	MenuItemT *pSelectedMenuItem = this->getSelectedItemPtr();
+	MenuItem_t *pSelectedMenuItem = this->getSelectedMenuItemPtr();
 
 	switch (pSelectedMenuItem->valueType) {
 		case LcdMenu::BYTE:
@@ -378,7 +428,7 @@ void LcdMenu::decSelectedValue(void) {
  */
 void LcdMenu::invokeMenuItemCallBackFunct(void) {
 
-	MenuItemT *pSelectedMenuItem = this->getSelectedItemPtr();
+	MenuItem_t *pSelectedMenuItem = this->getSelectedMenuItemPtr();
 	if (pSelectedMenuItem->callbackFunct != NULL) {
 		(this->*(pSelectedMenuItem->callbackFunct))();
 	}
@@ -445,14 +495,14 @@ void LcdMenu::factoryResetCallBack(void) {
 	beepStateCallBack();
 
 	//menü alapállapotba
-	resetMenu();
+	resetViewPort();
 	menuState = FORCE_MAIN_DISPLAY;
 }
 
 /**
  * Kilépés a menübõl
  */
-void LcdMenu::exitCallBack(void) {
+void LcdMenu::menuExitCallBack(void) {
 
 	nokia5110Display->clearDisplay();
 	nokia5110Display->setTextColor(BLACK, WHITE);
@@ -462,7 +512,7 @@ void LcdMenu::exitCallBack(void) {
 	nokia5110Display->display();
 
 	//menü alapállapotba
-	resetMenu();
+	resetViewPort();
 	menuState = FORCE_MAIN_DISPLAY; //Kilépünk a menübõl
 }
 

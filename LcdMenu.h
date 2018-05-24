@@ -27,83 +27,183 @@
 #include "Config.h"
 #include "Nokia5110DisplayWrapper.h"
 
-
 #define MENU_VIEWPORT_SIZE 	3			/* Menü elemekbõl ennyi látszik egyszerre */
-#define LAST_MENUITEM_NDX 	11 			/* Az utolsó menüelem indexe, 0-tól indul */
 #define DEGREE_SYMBOL_CODE 	247			/* Az LCD-n a '°' jel kódja */
 
 class LcdMenu {
 
-private:
-	char tempBuff[32];
-	Nokia5110DisplayWrapper *nokia5110Display;
+	private:
+		const byte PROGMEM MENU_VIEVPORT_LINEPOS[3] = { 15, 25, 35 };	//Menüelemek sorai
+		char tempBuff[32];
+		Nokia5110DisplayWrapper *nokia5110Display;
 
-	typedef struct MenuViewport_t {
-		byte firstItem;
-		byte lastItem;
-		byte selectedItem;
-	} MenuViewPortT;
-	MenuViewPortT menuViewport;
+		typedef struct MenuViewport_t {
+				byte firstItem;
+				byte lastItem;
+				byte selectedItem;
+		};
+		MenuViewport_t menuViewport;
 
-public:
-	typedef enum MenuState_t {
-		FORCE_MAIN_DISPLAY, //Izombõl kirajzoljuk a MainDisplay-t
-		OFF,	//Nem látható
-		MAIN_MENU, //Main menü látható
-		ITEM_MENU //Elem Beállító menü látható
-	};
+	public:
+		typedef enum MenuState_t {
+			FORCE_MAIN_DISPLAY, 			//Izombõl kirajzoljuk a MainDisplay-t
+			OFF,							//Nem látható
+			MAIN_MENU, 						//Main menü látható
+			SUB_MENU, 						//almenü látható
+			ITEM_MENU 						//Elem Beállító menü látható
+		};
 
-	/* változtatható érték típusa */
-	typedef enum valueType_t {
-		BOOL, BYTE, PULSE, TEMP, WELD, FUNCT
-	};
+		/* változtatható érték típusa */
+		typedef enum MenuValueType_t {
+			BOOL, BYTE, PULSE, TEMP, WELD, FUNCT
+		};
 
-	typedef void (LcdMenu::*voidFuncPtr)(void);
-	typedef struct MenuItem_t {
-		char *title;				// Menüfelirat
-		valueType_t valueType;		// Érték típus
-		void *valuePtr;				// Az érték pointere
-		byte minValue;				// Minimális numerikus érték
-		byte maxValue;				// Maximális numerikus érték
-		voidFuncPtr callbackFunct; 	// Egyéb mûveletek függvény pointere, vagy NULL, ha nincs
-	} MenuItemT;
+	private:
+		typedef void (LcdMenu::*voidFuncPtr)(void);
 
-	MenuState_t menuState = OFF;
-	MenuItemT menuItems[LAST_MENUITEM_NDX + 1];
+		//Egy menüelem szerkezete
+		typedef struct MenuItem_t {
+				char *title;					// Menüfelirat
+				MenuValueType_t valueType;		// Érték típus
+				void *valuePtr;					// Az érték pointere
+				byte minValue;					// Minimális numerikus érték
+				byte maxValue;					// Maximális numerikus érték
+				voidFuncPtr callbackFunct; 		// Egyéb mûveletek függvény pointere, vagy NULL, ha nincs
+		};
 
-	LcdMenu(void);
-	void drawSplashScreen(void);
-	void resetMenu(void);
-	void drawTempValue(float *pCurrentMotTemp);
-	void drawMainDisplay(float *pCurrentMotTemp);
-	void drawWarningDisplay(float *pCurrentMotTemp);
-	void drawMainMenu(void);
-	void drawMenuItemValue();
-	void stepDown(void);
-	void stepUp(void);
-	void incSelectedValue(void);
-	void decSelectedValue(void);
-	void invokeMenuItemCallBackFunct(void);
+		//Egy menü szerkezete
+		typedef struct Menu_t {
+				char *menuTitle = NULL;				//Menü title
+				byte menuItemsCnt = 0;			//255 almenü elég lesz...
+				MenuItem_t *pMenuItems = NULL; 		//menüelemek területe
+		};
 
-	/**
-	 * Kiválasztott menüelem pointerének elkérése
-	 */
-	MenuItemT *getSelectedItemPtr() {
-		return &menuItems[menuViewport.selectedItem];
-	}
+		//Menük
+		Menu_t *pMainMenu;
+		Menu_t *pWeldSettingsSubMenu;
+		Menu_t *pLcdSettingsSubMenu;
+		Menu_t *pFactoryResetSubMenu;
 
-private:
-	void initMenuItems(void);
-	void lcdContrastCallBack(void);
-	void lcdBiasCallBack(void);
-	void lcdBackLightCallBack(void);
-	void beepStateCallBack(void);
-	void factoryResetCallBack(void);
-	void exitCallBack(void);
+		//Aktuális menü pointere
+		Menu_t *pCurrentMenu;
 
-private:
-	const byte PROGMEM MENU_VIEVPORT_LINEPOS[3] = { 15, 25, 35 };	//Menüelemek sorai
-	String msecToStr(long x);
+		MenuViewport_t prevMenuViewport;
+		MenuState_t prevMenuState;
+
+
+	public:
+		MenuState_t menuState = OFF;
+
+		LcdMenu(void);
+		void drawSplashScreen(void);
+		void resetViewPort(void);
+		void drawTemperatureValue(float *pCurrentMotTemp);
+		void drawMainDisplay(float *pCurrentMotTemp);
+		void drawWarningDisplay(float *pCurrentMotTemp);
+		void drawCurrentMenu(void);
+		void drawMenuItemValue();
+		void stepDown(void);
+		void stepUp(void);
+		void incSelectedValue(void);
+		void decSelectedValue(void);
+		void invokeMenuItemCallBackFunct(void);
+
+		/**
+		 * Kiválasztott menüelem mögötti változtatható érték típusa
+		 */
+		MenuValueType_t getSelectedMenuItemValueType() {
+			return getSelectedMenuItemPtr()->valueType;
+		}
+
+		//-- MenüÁlapotVáltások
+		void enterMainMenu(void){
+			menuState = LcdMenu::MAIN_MENU;
+			prevMenuState = menuState;
+			resetViewPort();
+			drawCurrentMenu(); //Kirajzoltatjuk a fõmenüt
+		}
+		void exitMainMenu(void){
+			pCurrentMenu = pMainMenu;
+			menuState = OFF;
+			prevMenuState = menuState;
+		}
+
+		void enterSubMenu(void){
+			//Elmentjük az elõzõ állapotot
+			memcpy(&prevMenuViewport, &menuViewport, sizeof(MenuViewport_t));
+			prevMenuState = menuState;
+
+			menuState = SUB_MENU;
+			resetViewPort();
+			drawCurrentMenu(); //kirajzoltatjuk az almenüt.
+		}
+		void exitSubMenu(void){
+			//Visszaállítjuk az elõzõ állapotot
+			memcpy(&menuViewport, &prevMenuViewport, sizeof(MenuViewport_t));
+			menuState = prevMenuState;
+
+			pCurrentMenu = pMainMenu;
+			drawCurrentMenu();
+		}
+
+		void enterItemMenu(void){
+			prevMenuState = menuState;
+			menuState = ITEM_MENU;
+		}
+		void exitItemMenu(void){
+			menuState = prevMenuState;
+			drawCurrentMenu();
+		}
+
+	private:
+		void initMenuItems(void);
+		void lcdContrastCallBack(void);
+		void lcdBiasCallBack(void);
+		void lcdBackLightCallBack(void);
+		void beepStateCallBack(void);
+		void factoryResetCallBack(void);
+		void menuExitCallBack(void);
+
+		//--- al menük
+		/**
+		 * WELD almenübe léptünk
+		 */
+		void enterWeldSettingsSubmenuCallBack(void) {
+			pCurrentMenu = pWeldSettingsSubMenu;
+			enterSubMenu();
+		}
+		/**
+		 * LCD almenübe léptünk
+		 */
+		void enterLcdSettingsSubmenuCallBack(void) {
+			pCurrentMenu = pLcdSettingsSubMenu;
+			enterSubMenu();
+		}
+		/**
+		 * Factory reset almenübe léptünk
+		 */
+		void enterFactoryResetSubmenuCallBack(void){
+			pCurrentMenu = pFactoryResetSubMenu;
+			enterSubMenu();
+		}
+
+		String msecToStr(long x);
+
+		/**
+		 * Egy új menüelem hozzáadása a menühöz
+		 */
+		void addMenuItem(Menu_t *pMenu, MenuItem_t menuItem) {
+			pMenu->pMenuItems = realloc(pMenu->pMenuItems, (pMenu->menuItemsCnt + 1) * sizeof(MenuItem_t)); //memóriafoglalás
+			memcpy(pMenu->pMenuItems + pMenu->menuItemsCnt, &menuItem, sizeof(MenuItem_t)); //menüelem odamásolása
+			pMenu->menuItemsCnt++; //+1 menüelem van már
+		}
+
+		/**
+		 * A kiválasztott menüelem pointerének elkérése
+		 */
+		MenuItem_t *getSelectedMenuItemPtr() {
+			return pCurrentMenu->pMenuItems + menuViewport.selectedItem;
+		}
 
 };
 

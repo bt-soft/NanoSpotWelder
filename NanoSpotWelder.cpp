@@ -161,17 +161,16 @@ void itemMenuController(bool rotaryClicked, RotaryEncoderWrapper::Direction rota
 
 	} //if (!rotaryClicked)
 
-	//Klikkeltek az elem értékére -> kilépünk a menüelem-bõl a  fõmenübe
-	lcdMenu->menuState = LcdMenu::MAIN_MENU;
-	lcdMenu->drawMainMenu();
+	//Klikkeltek az elem értékére -> kilépünk a menüelembeállításból
+	lcdMenu->exitItemMenu();
 }
 
 /**
- * Fõmenü kontroller
+ * Fõ/almenü kontroller
  */
 void mainMenuController(bool rotaryClicked, RotaryEncoderWrapper::Direction rotaryDirection) {
 
-	if (lcdMenu->menuState != LcdMenu::MAIN_MENU) {
+	if (lcdMenu->menuState != LcdMenu::MAIN_MENU && lcdMenu->menuState != LcdMenu::SUB_MENU) {
 		return;
 	}
 
@@ -195,20 +194,17 @@ void mainMenuController(bool rotaryClicked, RotaryEncoderWrapper::Direction rota
 				return;
 		}
 
-		lcdMenu->drawMainMenu();
 		return;
 
 	} //if (!rotaryClicked)
 
 	//
-	// Klikkeltek a main menüben egy menüelemre
-	// - Kinyerjük a kiválasztott menüelem pointerét
-	// - Kirajzoltatjuk az elem értékét
+	// Klikkeltek a menüben egy menüelemre
 	// - Átállítjuk az állapotott az elembeállításra
 	//
 
 	//Típus szerint megyünk tovább
-	switch (lcdMenu->getSelectedItemPtr()->valueType) {
+	switch (lcdMenu->getSelectedMenuItemValueType()) {
 
 		//Ha ez egy értékbeállító almenü
 		//Csak egy függvényt kell hívni, az majd elintéz mindent
@@ -217,14 +213,14 @@ void mainMenuController(bool rotaryClicked, RotaryEncoderWrapper::Direction rota
 			break;
 
 		default:
-			lcdMenu->menuState = LcdMenu::ITEM_MENU;
-			itemMenuController(false, RotaryEncoderWrapper::Direction::NONE); //Kérünk egy menüelem beállító képernyõ kirajzolást
+			lcdMenu->enterItemMenu();
+			itemMenuController(false, RotaryEncoderWrapper::Direction::NONE); //Csak egy menüelem beállító képernyõ kirajzolást kérünk
 			break;
 	}
 }
 
 /**
- * Menu kezelése
+ * Menü kezelése
  */
 void menuController(bool rotaryClicked, RotaryEncoderWrapper::Direction rotaryDirection) {
 
@@ -234,13 +230,13 @@ void menuController(bool rotaryClicked, RotaryEncoderWrapper::Direction rotaryDi
 		case LcdMenu::OFF:
 			if (rotaryClicked) {
 				pBuzzer->buzzerMenu();
-				lcdMenu->menuState = LcdMenu::MAIN_MENU;
-				lcdMenu->drawMainMenu(); //Kirajzoltatjuk a fõmenüt
+				lcdMenu->enterMainMenu();
 			}
 			break;
 
 			//Látszik a fõmenü
 		case LcdMenu::MAIN_MENU:
+		case LcdMenu::SUB_MENU:
 			pBuzzer->buzzerMenu();
 			mainMenuController(rotaryClicked, rotaryDirection);
 			break;
@@ -262,15 +258,19 @@ void menuInactiveController(void) {
 
 		//Main Menüben vagyunk
 		case LcdMenu::MAIN_MENU:
-			lcdMenu->resetMenu(); //Kilépünk a menübõl...
-			lcdMenu->menuState = LcdMenu::OFF;
+			lcdMenu->exitMainMenu(); //Kilépünk a menübõl...
 			pMOTTemp->lastMotTemp = -1.0f; //kierõszakoljuk a main display újrarajzoltatását
 			break;
 
-			//Elembeállító menüben vagyunk
+			//Almenüben vagyunk -> megyünk a fõmenübe
+		case LcdMenu::SUB_MENU:
+			lcdMenu->exitSubMenu(); //Kilépünk az almenübõl a fõmenübe
+			break;
+
+			//Elembeállító menüben vagyunk -> megyünk az almenübe vagy a fõmenübe
 		case LcdMenu::ITEM_MENU:
-			lcdMenu->drawMainMenu(); //Kilépünk az almenübõl a fõmenübe
-			lcdMenu->menuState = LcdMenu::MAIN_MENU;
+			lcdMenu->exitItemMenu();
+			break;
 	}
 }
 

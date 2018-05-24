@@ -35,10 +35,10 @@
 #define REQUIRESALARMS 			false	/* nem kell a DallasTemperature ALARM supportja */
 #include <DallasTemperature.h>
 #define MOT_TEMP_SENSOR_NDX 	0		/* Dallas DS18B20 hõmérõ szenzor indexe */
-#pragma message "Using Dallas DS18B20 Temperature Sensor"
+//#pragma message "Using Dallas DS18B20 Temperature Sensor"
 #else
 #include <MD_LM335A.h>
-#pragma message "Using LM335 Temperature Sensor"
+//#pragma message "Using LM335 Temperature Sensor"
 #endif
 
 class MOTTemp {
