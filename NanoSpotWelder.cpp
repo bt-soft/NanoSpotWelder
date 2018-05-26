@@ -279,7 +279,7 @@ typedef enum weldState_t {
 	PRE_WELD, 		//Elõimpulzus
 	PAUSE_WELD,  	//Szünet a két impulzus között
 	WELD, 			//Hegesztõ impulzus
-	BUNDLE_PAUSE,	//Hegesztési csomagok közötti várakozás
+	PACKET_PAUSE,	//Hegesztési csomagok közötti várakozás
 	WELD_END 		//Nincs hegesztés
 } WeldState_T;
 
@@ -345,13 +345,13 @@ void zeroCrossDetect(void) {
 				} else {
 					//Ha több hegesztési csomag van beállítva, akkor elkezdjük a csomagok közötti várakozást
 					weldPeriodCnt = 0;
-					weldCurrentState = BUNDLE_PAUSE;
+					weldCurrentState = PACKET_PAUSE;
 				}
 			}
 			break;
 
 			//Két hegesztési csomag közötti várakozában vagyunk
-		case BUNDLE_PAUSE:
+		case PACKET_PAUSE:
 			//elértük már a két csomag közötti várakozó impulzuszok számát?
 			if (++weldPeriodCnt >= pConfig->configVars.packetPauseCnt) {
 				weldPeriodCnt = 0;
