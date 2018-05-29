@@ -130,9 +130,9 @@ void LcdMenu::drawMainDisplay(float *pCurrentMotTemp) {
 	if (pConfig->configVars.pulseCountWeldMode) {
 
 		if (pConfig->configVars.packetCnt > 1) {
-			sprintf(tempBuff, "Pc %-2d  Pp %-3d", pConfig->configVars.packetCnt, pConfig->configVars.packetPauseCnt);
+			sprintf(tempBuff, "Pc %-2d  Pp %-3d ", pConfig->configVars.packetCnt, pConfig->configVars.packetPauseCnt);
 		} else {
-			sprintf(tempBuff, "Pc %-2d  Pp -", pConfig->configVars.packetCnt);
+			sprintf(tempBuff, "Pc %-2d  Pp -   ", pConfig->configVars.packetCnt);
 		}
 		nokia5110Display->setTextColor(WHITE, BLACK);
 		nokia5110Display->println(tempBuff);
