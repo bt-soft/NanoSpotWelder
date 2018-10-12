@@ -486,7 +486,7 @@ void loop(void) {
 	//Ha változott az állapot LOW -> HIGH irányban
 	if (weldButtonCurrentState != weldButtonPrevState && weldButtonCurrentState == HIGH && weldButtonPrevState == LOW) {
 		weldButtonPushed();
-		lcdMenu->menuState = LcdMenu::OFF; //kilépünk majd a menübõl, ha épp benne voltunk
+		lcdMenu->menuState = LcdMenu::FORCE_MAIN_DISPLAY; //kilépünk majd a menübõl, ha épp benne voltunk
 		delay(100); //weld button debounce -> rövid impulzus csomagok esetén jól jöhet
 	}
 	//Eltesszük az aktuális button állapotot
